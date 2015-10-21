@@ -1,0 +1,13 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".js" #>
+<#@ assembly name="$(SolutionDir)Castle.Sharp2Js.Tests\bin\Debug\Castle.Sharp2Js.dll" #>
+<#@ assembly name="$(SolutionDir)Castle.Sharp2Js.Tests\bin\Debug\Castle.Sharp2Js.Tests.dll" #>
+<#@ output extension=".js" #>
+<# var str = Castle.Sharp2Js.JsGenerator.GenerateJsModelFromTypeWithDescendants(typeof(Castle.Sharp2Js.Tests.DTOs.AddressInformation), true, "castle"); #>
+castle = {};
+
+<#=str#>
