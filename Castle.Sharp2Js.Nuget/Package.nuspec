@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>sharp2Js</id>
+    <version>1.0.0</version>
+    <title>sharp2Js</title>
+    <authors>Grant Hamm, Jared Kremer</authors>
+    <owners>Castle Worldwide, Inc</owners>
+    <description>
+      sharp2Js is a small library that can create javascript objects that mirror your C# POCO classes and can be easily used to generate js files using T4 templates.
+    </description>
+    <releaseNotes>
+    </releaseNotes>
+    <summary>
+      sharp2Js is a small library that can create javascript objects that mirror your C# POCO classes and can be easily used to generate js files using T4 templates.
+    </summary>
+    <language>en-US</language>
+    <projectUrl>https://github.com/castle-it/sharp2Js</projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
+    <copyright>Copyright Castle Worldwide, Inc. 2015</copyright>
+    <dependencies>
+    </dependencies>
+    <references></references>
+    <tags>sharp2Js poco javascript generate model</tags>
+  </metadata>
+  <files>
+    <file src="lib\" target="lib" />
+    <file src="content\" target="content" />
+  </files>
+</package>
