@@ -1,16 +1,24 @@
 # sharp2Js
 [![Build Status](https://travis-ci.org/castle-it/sharp2Js.svg?branch=master)](https://travis-ci.org/castle-it/sharp2Js)
 
-`sharp2Js` is a small library that can create javascript objects that mirror your `C#` POCO classes, and you can easily redirect that output to `T4` templates.
+`sharp2Js` is a small library that can create javascript objects that mirror your `C#` POCO classes and can be easily used to generate js files using `T4` templates.
 
-### Features
+Features
+--
 * Generates merge map function to make applying model changes easy
 * Handle custom types, primitives, and `List<T>`
 * Allows for an override constructor if you need to wrap the created objects
 * Outputs to string for easy addition to `T4` template output
 * Supports camel casing
 
-### Sample T4 Example
+Installation
+---
+`sharp2Js` can be installed via the nuget UI (as sharp2Js), or via the nuget package manager console:
+```
+PM> Install-Package sharp2Js
+```
+Sample T4 Example
+---
 ```C#
 <#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
@@ -18,17 +26,15 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".js" #>
-<#@ assembly name="$(SolutionDir)Castle.Sharp2Js.Tests\bin\Debug\Castle.Sharp2Js.dll" #>
-<#@ assembly name="$(SolutionDir)Castle.Sharp2Js.Tests\bin\Debug\Castle.Sharp2Js.Tests.dll" #>
+<#@ assembly name="$(ProjectDir)bin\$(ConfigurationName)\Castle.Sharp2Js.dll" #>
 <#@ output extension=".js" #>
-<# var str = Castle.Sharp2Js.JsGenerator.GenerateJsModelFromTypeWithDescendants(typeof(Castle.Sharp2Js.Tests.DTOs.AddressInformation), true, "castle"); #>
+<# var str = Castle.Sharp2Js.JsGenerator.GenerateJsModelFromTypeWithDescendants(typeof(Castle.Sharp2Js.SampleData.AddressInformation), true, "castle"); #>
 castle = {};
 
 <#=str#>
 ```
-
-
-### C# POCOs
+C# POCOs Example
+---
 ```C#
 public class AddressInformation
     {
@@ -53,8 +59,8 @@ public class AddressInformation
         public double Value { get; set; }
     }
 ```
-
-### Javascript Object Output
+Javascript Object Output
+---
 ```JavaSscript
 castle.AddressInformation = function (cons, overrideObj) {
 	if (!overrideObj) { overrideObj = { }; }
@@ -164,5 +170,6 @@ castle.Feature = function (cons, overrideObj) {
 }
 ```
 
-### Contributions
+Contributions
+---
 Any improvements are welcome.  `sharp2Js` has served our limited purposes so far, but we would love to see it grow.
