@@ -5,11 +5,12 @@
 
 Features
 --
-* Generates merge map function to make applying model changes easy
-* Handle custom types, primitives, and `List<T>`
+* Optionally generates merge map function to make applying model changes easy
+* Handle custom types, primitives, Arrays, and `List<T>`
 * Allows for an override constructor if you need to wrap the created objects
 * Outputs to string for easy addition to `T4` template output
-* Supports camel casing
+* Supports optional camel casing
+* Supports optional automatic removal of phrases like Dto, etc.
 
 Installation
 ---
@@ -28,8 +29,8 @@ Sample T4 Example
 <#@ output extension=".js" #>
 <#@ assembly name="$(ProjectDir)bin\$(ConfigurationName)\Castle.Sharp2Js.dll" #>
 <#@ output extension=".js" #>
-<# var str = Castle.Sharp2Js.JsGenerator.GenerateJsModelFromTypeWithDescendants(typeof(Castle.Sharp2Js.SampleData.AddressInformation), true, "castle"); #>
-castle = {};
+<# var str = Castle.Sharp2Js.JsGenerator.Generate(new [] { typeof(Castle.Sharp2Js.SampleData.AddressInformation) }); #>
+models = {};
 
 <#=str#>
 ```
@@ -62,112 +63,111 @@ public class AddressInformation
 Javascript Object Output
 ---
 ```JavaSscript
-castle.AddressInformation = function (cons, overrideObj) {
+models = {};
+
+models.AddressInformation = function (cons, overrideObj) {
 	if (!overrideObj) { overrideObj = { }; }
 	if (!cons) { cons = { }; }
 	var i, length;
-	this.name = cons.name;
-	this.address = cons.address;
-	this.zipCode = cons.zipCode;
+
+	this.Name = cons.Name;
+	this.Address = cons.Address;
+	this.ZipCode = cons.ZipCode;
 	if (!overrideObj.OwnerInformation) {
-		this.owner = new castle.OwnerInformation(cons.owner);
+		this.Owner = new models.OwnerInformation(cons.Owner);
 	} else {
-		this.owner = new overrideObj.OwnerInformation(cons.owner, overrideObj);
+		this.Owner = new overrideObj.OwnerInformation(cons.Owner, overrideObj);
 	}
-	this.features = new Array(cons.features == null ? 0 : cons.features.length );
-	if(cons.features != null) {
-		for (i = 0, length = cons.features.length; i < length; i++) {
+	this.Features = new Array(cons.Features == null ? 0 : cons.Features.length );
+	if(cons.Features != null) {
+		for (i = 0, length = cons.Features.length; i < length; i++) {
 			if (!overrideObj.Feature) {
-				this.features[i] = new castle.Feature(cons.features[i]);
+				this.Features[i] = new models.Feature(cons.Features[i]);
 			} else {
-				this.features[i] = new overrideObj.Feature(cons.features[i], overrideObj);
+				this.Features[i] = new overrideObj.Feature(cons.Features[i], overrideObj);
 			}
 		}
 	}
-	this.tags = new Array(cons.tags == null ? 0 : cons.tags.length );
-	if(cons.tags != null) {
-		for (i = 0, length = cons.tags.length; i < length; i++) {
-			this.tags[i] = cons.tags[i];
+	this.Tags = new Array(cons.Tags == null ? 0 : cons.Tags.length );
+	if(cons.Tags != null) {
+		for (i = 0, length = cons.Tags.length; i < length; i++) {
+			this.Tags[i] = cons.Tags[i];
 		}
 	}
 
-
 	this.$merge = function (mergeObj) {
 		if (!mergeObj) { mergeObj = { }; }
-		this.name = mergeObj.name;
-		this.address = mergeObj.address;
-		this.zipCode = mergeObj.zipCode;
-		if (mergeObj.owner == null) {
-			this.owner = null;
-		} else if (this.owner != null) {
-			this.owner.$merge(mergeObj.owner);
+		this.Name = mergeObj.Name;
+		this.Address = mergeObj.Address;
+		this.ZipCode = mergeObj.ZipCode;
+		if (mergeObj.Owner == null) {
+			this.Owner = null;
+		} else if (this.Owner != null) {
+			this.Owner.$merge(mergeObj.Owner);
 		} else {
-			this.owner = mergeObj.owner;
+			this.Owner = mergeObj.Owner;
 		}
-		if (!mergeObj.features) {
-			this.features = null;
+		if (!mergeObj.Features) {
+			this.Features = null;
 		}
-		if (this.features != null) {
-			this.features.splice(0, this.features.length);
+		if (this.Features != null) {
+			this.Features.splice(0, this.Features.length);
 		}
-		if (mergeObj.features) {
-			if (this.features === null) {
-				this.features = [];
+		if (mergeObj.Features) {
+			if (this.Features === null) {
+				this.Features = [];
 			}
-			for (i = 0; i < mergeObj.features.length; i++) {
-				this.features.push(mergeObj.features[i]);
+			for (i = 0; i < mergeObj.Features.length; i++) {
+				this.Features.push(mergeObj.Features[i]);
 			}
 		}
-		if (!mergeObj.tags) {
-			this.tags = null;
+		if (!mergeObj.Tags) {
+			this.Tags = null;
 		}
-		if (this.tags != null) {
-			this.tags.splice(0, this.tags.length);
+		if (this.Tags != null) {
+			this.Tags.splice(0, this.Tags.length);
 		}
-		if (mergeObj.tags) {
-			if (this.tags === null) {
-				this.tags = [];
+		if (mergeObj.Tags) {
+			if (this.Tags === null) {
+				this.Tags = [];
 			}
-			for (i = 0; i < mergeObj.tags.length; i++) {
-				this.tags.push(mergeObj.tags[i]);
+			for (i = 0; i < mergeObj.Tags.length; i++) {
+				this.Tags.push(mergeObj.Tags[i]);
 			}
 		}
 	}
 }
 
 
-castle.OwnerInformation = function (cons, overrideObj) {
-	if (!overrideObj) { overrideObj = { }; }
+models.OwnerInformation = function (cons) {
 	if (!cons) { cons = { }; }
-	var i, length;
-	this.firstName = cons.firstName;
-	this.lastName = cons.lastName;
-	this.age = cons.age;
 
+	this.FirstName = cons.FirstName;
+	this.LastName = cons.LastName;
+	this.Age = cons.Age;
 
 	this.$merge = function (mergeObj) {
 		if (!mergeObj) { mergeObj = { }; }
-		this.firstName = mergeObj.firstName;
-		this.lastName = mergeObj.lastName;
-		this.age = mergeObj.age;
+		this.FirstName = mergeObj.FirstName;
+		this.LastName = mergeObj.LastName;
+		this.Age = mergeObj.Age;
 	}
 }
 
 
-castle.Feature = function (cons, overrideObj) {
-	if (!overrideObj) { overrideObj = { }; }
+models.Feature = function (cons) {
 	if (!cons) { cons = { }; }
-	var i, length;
-	this.name = cons.name;
-	this.value = cons.value;
 
+	this.Name = cons.Name;
+	this.Value = cons.Value;
 
 	this.$merge = function (mergeObj) {
 		if (!mergeObj) { mergeObj = { }; }
-		this.name = mergeObj.name;
-		this.value = mergeObj.value;
+		this.Name = mergeObj.Name;
+		this.Value = mergeObj.Value;
 	}
 }
+
 ```
 
 Contributions
