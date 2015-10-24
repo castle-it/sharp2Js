@@ -6,8 +6,8 @@
 <#@ output extension=".js" #>
 <#@ assembly name="$(ProjectDir)bin\$(ConfigurationName)\Castle.Sharp2Js.dll" #>
 <#@ output extension=".js" #>
-<# var str = Castle.Sharp2Js.JsGenerator.GenerateJsModelFromTypeWithDescendants(typeof(Castle.Sharp2Js.SampleData.AddressInformation), true, "castle"); #>
-castle = {};
+<# var str = Castle.Sharp2Js.JsGenerator.Generate(new [] { typeof(Castle.Sharp2Js.SampleData.AddressInformation) }); #>
+models = {};
 
 <#=str#>
 

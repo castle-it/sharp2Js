@@ -98,6 +98,7 @@
     <Message Text="SUCCESS: Published package." Condition=" '$(Configuration)|$(Platform)|$(ExitCode)' == 'Release|AnyCPU|0' " Importance="High" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>xcopy "$(SolutionDir)Castle.Sharp2Js\bin\$(ConfigurationName)\Castle.Sharp2Js.dll" "$(ProjectDir)lib" /R /Y</PreBuildEvent>
+    <PreBuildEvent>xcopy "$(SolutionDir)Castle.Sharp2Js\bin\$(ConfigurationName)\Castle.Sharp2Js.dll" "$(ProjectDir)lib" /R /Y
+xcopy "$(SolutionDir)Castle.Sharp2Js\bin\$(ConfigurationName)\Castle.Sharp2Js.xml" "$(ProjectDir)lib" /R /Y</PreBuildEvent>
   </PropertyGroup>
 </Project>

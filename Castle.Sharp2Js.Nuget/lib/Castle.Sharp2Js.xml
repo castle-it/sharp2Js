@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Castle.Sharp2Js</name>
+    </assembly>
+    <members>
+        <member name="T:Castle.Sharp2Js.JsGenerator">
+            <summary>
+            Converts C# classes to javascript objects for use across application tiers and in REST calls, etc.
+            </summary>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGenerator.Options">
+            <summary>
+            Global settings for the generator.  These will be used if no override is provided.
+            </summary>
+            <value>
+            The options.
+            </value>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.Generate(System.Collections.Generic.IEnumerable{System.Type},Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Generates a string containing js definitions of the provided types and all implied descendant types.
+            </summary>
+            <param name="typesToGenerate">The types to generate.</param>
+            <param name="generatorOptions">The generator options. Uses global settings if not provided.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.GenerateJsModelFromTypeWithDescendants(System.Type,System.Boolean,System.String)">
+            <summary> 
+            Generates a js equivalent to a C# class and descendant classes. 
+            </summary>
+            <param name="modelType">Type of the model.</param>
+            <param name="camelCasePropertyNames">if set to <c>true</c>, use camel casing in the output model.</param>
+            <param name="outputNamespace">The output namespace.</param>
+            <returns>A javsacript object string.</returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.GenerateJs(System.Collections.Generic.IEnumerable{Castle.Sharp2Js.PropertyBag},Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Generates the js.
+            </summary>
+            <param name="propertyCollection">The property collection derived from the types to be converted.</param>
+            <param name="generationOptions">The generation options.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.GetName(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Gets the name, filtering out the strings provided.
+            </summary>
+            <param name="input">The input.</param>
+            <param name="nameFilters">The name filters.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.ToCamelCase(System.String,System.Boolean)">
+            <summary>
+            Camel cases an input string.
+            </summary>
+            <param name="input">The string.</param>
+            <param name="camelCase">if set to <c>true</c> [camel case].</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.GetPropertyDictionaryForTypeGeneration(System.Collections.Generic.IEnumerable{System.Type},System.Collections.Generic.List{Castle.Sharp2Js.PropertyBag})">
+            <summary>
+            Gets the property dictionary to be used for type generation.
+            </summary>
+            <param name="types">The types to generate property information for.</param>
+            <param name="propertyTypeCollection">The output collection of properties discovered through reflection of the supplied classes.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Castle.Sharp2Js.JsGeneratorOptions">
+            <summary>
+            Provides details about behaviors and output configurations used when generating Js from C# classes.
+            </summary>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.CamelCase">
+            <summary>
+            Gets or sets a value indicating whether to camel case the property names.
+            </summary>
+            <value>
+              <c>true</c> if [camel case]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.OutputNamespace">
+            <summary>
+            Gets or sets the output namespace of the javascript objects.
+            </summary>
+            <value>
+            The output namespace.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.IncludeMergeFunction">
+            <summary>
+            Gets or sets a value indicating whether to include a merge function for the js objects.
+            </summary>
+            <value>
+            <c>true</c> if [include merge function]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.ClassNameConstantsToRemove">
+            <summary>
+            Gets or sets a list of strings to remove from class names (e.g. Dto) automatically.
+            </summary>
+            <value>
+            The class name constants to remove.
+            </value>
+        </member>
+    </members>
+</doc>

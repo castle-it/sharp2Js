@@ -10,12 +10,12 @@ namespace Castle.Sharp2Js
         }
 
         public PropertyBag(string typeName, string propertyName, Type propertyType,
-            bool isGenericList, string propertyTypeName, bool isPrimitiveType)
+            bool isArray, string propertyTypeName, bool isPrimitiveType)
         {
             TypeName = typeName;
             PropertyName = propertyName;
             PropertyType = propertyType;
-            IsGenericList = isGenericList;
+            IsArray = isArray;
             PropertyTypeName = propertyTypeName;
             IsPrimitiveType = isPrimitiveType;
         }
@@ -23,7 +23,7 @@ namespace Castle.Sharp2Js
         public string TypeName { get; set; }
         public string PropertyName { get; set; }
         public Type PropertyType { get; set; }
-        public bool IsGenericList { get; set; }
+        public bool IsArray { get; set; }
         public string PropertyTypeName { get; set; }
         public bool IsPrimitiveType { get; set; }
 
