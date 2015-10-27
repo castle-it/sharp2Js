@@ -148,13 +148,5 @@ namespace Castle.Sharp2Js.Tests
 
     }
 
-    [TestFixture]
-    public class NUnitTest
-    {
-        [Test]
-        public void Test()
-        {
-            Assert.IsTrue(true);
-        }
-    }
+    
 }
