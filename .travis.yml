@@ -1,2 +1,8 @@
 language: csharp
-solution: Castle.Sharp2Js.sln
+solution: Castle.Sharp2Js.Tests.sln
+install:
+  - nuget restore Castle.Sharp2Js.Tests.sln
+  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+script:
+  - xbuild /p:Configuration=Release Castle.Sharp2Js.Tests.sln
+  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Castle.Sharp2Js.Tests/bin/Release/Castle.Sharp2Js.Tests.dll
