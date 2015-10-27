@@ -77,7 +77,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Castle.Sharp2JS\Castle.Sharp2Js.csproj">
+    <ProjectReference Include="..\Castle.Sharp2Js\Castle.Sharp2Js.csproj">
       <Project>{c9ccb675-668d-48ff-ad47-7e2d9eda49e1}</Project>
       <Name>Castle.Sharp2Js</Name>
     </ProjectReference>
