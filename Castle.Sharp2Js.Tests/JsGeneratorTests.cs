@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using Castle.Sharp2Js.SampleData;
 using Castle.Sharp2Js.Tests.DTOs;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Castle.Sharp2Js.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class JsGeneratorTests
     {
-        [TestMethod]
+        [Test]
         public void BasicGenerationLegacy()
         {
             //Generate a basic javascript model from a C# class
@@ -31,15 +31,15 @@ namespace Castle.Sharp2Js.Tests
                 Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
             }
 
-            
+
         }
 
-        [TestMethod]
+        [Test]
         public void RecursiveTypeGenerationLegacy()
         {
             //Generate a basic javascript model from a C# class
 
-            var modelType = typeof(RecursiveTest);
+            var modelType = typeof (RecursiveTest);
 
             var outputJs = JsGenerator.GenerateJsModelFromTypeWithDescendants(modelType, true, "castle");
 
@@ -59,12 +59,12 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void BasicGeneration()
         {
             //Generate a basic javascript model from a C# class
 
-            var modelType = typeof(AddressInformation);
+            var modelType = typeof (AddressInformation);
 
             var outputJs = JsGenerator.Generate(new[] {modelType});
 
@@ -84,16 +84,16 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void BasicGenerationWithOptions()
         {
             //Generate a basic javascript model from a C# class
 
-            var modelType = typeof(AddressInformation);
+            var modelType = typeof (AddressInformation);
 
-            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            var outputJs = JsGenerator.Generate(new[] {modelType}, new JsGeneratorOptions()
             {
-                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                ClassNameConstantsToRemove = new List<string>() {"Dto"},
                 CamelCase = true,
                 IncludeMergeFunction = false,
                 OutputNamespace = "models"
@@ -115,16 +115,16 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void ArrayTypeHandling()
         {
             //Generate a basic javascript model from a C# class
 
-            var modelType = typeof(ArrayTypeTest);
+            var modelType = typeof (ArrayTypeTest);
 
-            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            var outputJs = JsGenerator.Generate(new[] {modelType}, new JsGeneratorOptions()
             {
-                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                ClassNameConstantsToRemove = new List<string>() {"Dto"},
                 CamelCase = true,
                 IncludeMergeFunction = false,
                 OutputNamespace = "models"
@@ -146,5 +146,15 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
+    }
+
+    [TestFixture]
+    public class NUnitTest
+    {
+        [Test]
+        public void Test()
+        {
+            Assert.IsTrue(true);
+        }
     }
 }
