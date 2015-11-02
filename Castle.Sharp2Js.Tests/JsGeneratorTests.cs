@@ -16,7 +16,9 @@ namespace Castle.Sharp2Js.Tests
 
             var modelType = typeof (AddressInformation);
 
+#pragma warning disable 618
             var outputJs = JsGenerator.GenerateJsModelFromTypeWithDescendants(modelType, true, "castle");
+#pragma warning restore 618
 
             Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
 
@@ -41,7 +43,9 @@ namespace Castle.Sharp2Js.Tests
 
             var modelType = typeof (RecursiveTest);
 
+#pragma warning disable 618
             var outputJs = JsGenerator.GenerateJsModelFromTypeWithDescendants(modelType, true, "castle");
+#pragma warning restore 618
 
             Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
 
@@ -128,6 +132,38 @@ namespace Castle.Sharp2Js.Tests
                 CamelCase = true,
                 IncludeMergeFunction = false,
                 OutputNamespace = "models"
+            });
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+            try
+            {
+                js.Parse(outputJs);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+
+        }
+
+        [Test]
+        public void DataMemberAttributeHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(AttributeInformationTest);
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = false,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true
             });
 
             Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
