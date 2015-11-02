@@ -211,4 +211,7 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
+#Webstorm Files
+.idea/
+
 !NuGet.exe
