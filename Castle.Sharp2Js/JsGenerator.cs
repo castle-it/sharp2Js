@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace Castle.Sharp2Js
@@ -16,12 +18,7 @@ namespace Castle.Sharp2Js
         /// <value>
         /// The options.
         /// </value>
-        public static JsGeneratorOptions Options { get; set; } = new JsGeneratorOptions()
-        {
-            CamelCase = false,
-            IncludeMergeFunction = true,
-            OutputNamespace = "models"
-        };
+        public static JsGeneratorOptions Options { get; set; } = new JsGeneratorOptions();
 
         /// <summary>
         /// Generates a string containing js definitions of the provided types and all implied descendant types.
@@ -31,7 +28,7 @@ namespace Castle.Sharp2Js
         /// <returns></returns>
         public static string Generate(IEnumerable<Type> typesToGenerate, JsGeneratorOptions generatorOptions = null)
         {
-            var propertyClassCollection = GetPropertyDictionaryForTypeGeneration(typesToGenerate);
+            var propertyClassCollection = GetPropertyDictionaryForTypeGeneration(typesToGenerate, generatorOptions ?? Options);
             var js = GenerateJs(propertyClassCollection, generatorOptions);
             return js;
         }
@@ -47,7 +44,7 @@ namespace Castle.Sharp2Js
         [Obsolete("This is a legacy method. Please use the Generate(...) method instead.")]
         public static string GenerateJsModelFromTypeWithDescendants(Type modelType, bool camelCasePropertyNames, string outputNamespace)
         {
-            var propertyDictionary = GetPropertyDictionaryForTypeGeneration(new[] { modelType });
+            var propertyDictionary = GetPropertyDictionaryForTypeGeneration(new[] { modelType }, Options);
 
             return GenerateJs(propertyDictionary, new JsGeneratorOptions()
             {
@@ -248,9 +245,11 @@ namespace Castle.Sharp2Js
         /// Gets the property dictionary to be used for type generation.
         /// </summary>
         /// <param name="types">The types to generate property information for.</param>
+        /// <param name="generatorOptions">The generator options.</param>
         /// <param name="propertyTypeCollection">The output collection of properties discovered through reflection of the supplied classes.</param>
         /// <returns></returns>
         private static IEnumerable<PropertyBag> GetPropertyDictionaryForTypeGeneration(IEnumerable<Type> types,
+            JsGeneratorOptions generatorOptions,
             List<PropertyBag> propertyTypeCollection = null)
         {
             if (propertyTypeCollection == null)
@@ -261,52 +260,83 @@ namespace Castle.Sharp2Js
             {
 
                 var props = type.GetProperties();
-                var tName = type.Name;
+                var typeName = type.Name;
                 foreach (var prop in props)
                 {
-
-                    if (!prop.PropertyType.IsPrimitive && !prop.PropertyType.IsValueType &&
-                        prop.PropertyType != typeof(string))
+                    if (ShouldGenerateMember(prop, generatorOptions))
                     {
+                        var propertyName = GetPropertyName(prop, generatorOptions);
+                        var propertyType = prop.PropertyType;
 
-                        if ((prop.PropertyType.IsGenericType &&
-                            prop.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) || prop.PropertyType.IsArray)
+                        if (!propertyType.IsPrimitive && !propertyType.IsValueType &&
+                            propertyType != typeof (string))
                         {
-                            var elementType = prop.PropertyType.IsArray ? prop.PropertyType.GetElementType() : prop.PropertyType.GetGenericArguments()[0];
-                            var isPrimitive = elementType.IsPrimitive || elementType.IsValueType || (elementType == typeof(string));
 
-                            propertyTypeCollection.Add(new PropertyBag(tName, prop.Name, prop.PropertyType, true,
-                                elementType.Name, isPrimitive));
-
-                            if (!isPrimitive)
+                            if ((propertyType.IsGenericType &&
+                                 propertyType.GetGenericTypeDefinition() == typeof (List<>)) || propertyType.IsArray)
                             {
-                                if (propertyTypeCollection.All(p => p.TypeName != elementType.Name))
+                                var elementType = propertyType.IsArray
+                                    ? propertyType.GetElementType()
+                                    : propertyType.GetGenericArguments()[0];
+                                var isPrimitive = elementType.IsPrimitive || elementType.IsValueType ||
+                                                  (elementType == typeof (string));
+
+                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, true,
+                                    elementType.Name, isPrimitive));
+
+                                if (!isPrimitive)
+                                {
+                                    if (propertyTypeCollection.All(p => p.TypeName != elementType.Name))
+                                    {
+                                        propertyTypeCollection.AddRange(
+                                            GetPropertyDictionaryForTypeGeneration(new[] {elementType},
+                                                generatorOptions, propertyTypeCollection));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
+                                    propertyType.Name, false));
+                                if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
                                 {
                                     propertyTypeCollection.AddRange(
-                                        GetPropertyDictionaryForTypeGeneration(new[] { elementType }, propertyTypeCollection));
+                                        GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
+                                            generatorOptions, propertyTypeCollection));
                                 }
                             }
                         }
                         else
                         {
-                            propertyTypeCollection.Add(new PropertyBag(tName, prop.Name, prop.PropertyType, false,
-                                prop.PropertyType.Name, false));
-                            if (propertyTypeCollection.All(p => p.TypeName != prop.PropertyType.Name))
-                            {
-                                propertyTypeCollection.AddRange(
-                                    GetPropertyDictionaryForTypeGeneration(new[] { prop.PropertyType },
-                                        propertyTypeCollection));
-                            }
+                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
+                                string.Empty, true));
                         }
-                    }
-                    else
-                    {
-                        propertyTypeCollection.Add(new PropertyBag(tName, prop.Name, prop.PropertyType, false,
-                            string.Empty, true));
                     }
                 }
             }
             return propertyTypeCollection;
+        }
+
+        private static bool ShouldGenerateMember(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
+        {
+            if (!generatorOptions.RespectDataMemberAttribute) return true;
+
+            var customAttributes = propertyInfo.GetCustomAttributes(true);
+
+            return customAttributes.All(p => (p as IgnoreDataMemberAttribute) == null);
+        }
+
+        private static string GetPropertyName(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
+        {
+            if (!generatorOptions.RespectDataMemberAttribute) return propertyInfo.Name;
+
+            var customAttributes = propertyInfo.GetCustomAttributes(true);
+
+            if (customAttributes.All(p => (p as DataMemberAttribute) == null)) return propertyInfo.Name;
+
+            var dataMemberAttribute = (DataMemberAttribute)customAttributes.First(p => (p as DataMemberAttribute) != null);
+
+            return !string.IsNullOrWhiteSpace(dataMemberAttribute.Name) ? dataMemberAttribute.Name : propertyInfo.Name;
         }
     }
 }
