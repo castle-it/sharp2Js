@@ -1,8 +1,11 @@
 language: csharp
 solution: Castle.Sharp2Js.Tests.sln
 install:
-  - nuget restore Castle.Sharp2Js.Tests.sln
-  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+- nuget restore Castle.Sharp2Js.Tests.sln
+- nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
 script:
-  - xbuild /p:Configuration=Release Castle.Sharp2Js.Tests.sln
-  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Castle.Sharp2Js.Tests/bin/Release/Castle.Sharp2Js.Tests.dll
+- xbuild /p:Configuration=Release Castle.Sharp2Js.Tests.sln
+- mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Castle.Sharp2Js.Tests/bin/Release/Castle.Sharp2Js.Tests.dll
+notifications:
+  slack:
+    secure: FJfvVnluBrgUbEhFctVDGQJ68xd/N6lKNew8WZ93+PG4vTAd5pFJE1yqbSJwxyCYujCwCupNxaqY7HY7NZUYl+NWLh9dcFiiIk/3fYMVDyVu0ojZu2xljsCGsgBKab+QrJVKG4axSNE7wYTYxRY3T18zKYzv+IIXCAuPM4XztWtaKxo60SiZNkgiNYxydcv8JBzVy5nekOOP+Ng5fWa9mTuVhdU5HtgtcjNL0uQJrMPBH/emNhOoJIF0lMqyuHDhj2UG2iV8chxmZ6yNq1LYr73GGQQnO6wmHNa2qVkPEUrkpceZMID116QthDcmPs/JLP99wM+kgHaUmYmh+KtuAwBQupS9hSx4mDd2QQbfI5Ay1FA6ewCUFCjyPhNLOcgB0pGlHNDcwQ1MSCGFZD0GBVACveO+tXvCparpIRPUKTUkO3GW7qDqBXU+PjIjMUtapbjOyoNjCzLrmW/cJN1ZcArp5fb9q7vctfS1VKwucHxfMVwhl2TbSfDKRcpxh4Jq+/0lKZmCvPcTWwfBUYAKsuOkaznQ21SBLZY8V4ITpOdLElOTunHHeIxvXFdW9wGYgTLElYsU84afzPiQTnSYQj/bnyqkHoRwLfUVZuUSqf50wHJ1BNjkM7zUeC//zK1mmF+cv9im9Dl11RTZRqFAuKJJqbCqAmix5vus8DYzye4=
