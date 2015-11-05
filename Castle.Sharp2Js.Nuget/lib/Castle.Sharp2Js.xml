@@ -58,11 +58,12 @@
             <param name="camelCase">if set to <c>true</c> [camel case].</param>
             <returns></returns>
         </member>
-        <member name="M:Castle.Sharp2Js.JsGenerator.GetPropertyDictionaryForTypeGeneration(System.Collections.Generic.IEnumerable{System.Type},System.Collections.Generic.List{Castle.Sharp2Js.PropertyBag})">
+        <member name="M:Castle.Sharp2Js.JsGenerator.GetPropertyDictionaryForTypeGeneration(System.Collections.Generic.IEnumerable{System.Type},Castle.Sharp2Js.JsGeneratorOptions,System.Collections.Generic.List{Castle.Sharp2Js.PropertyBag})">
             <summary>
             Gets the property dictionary to be used for type generation.
             </summary>
             <param name="types">The types to generate property information for.</param>
+            <param name="generatorOptions">The generator options.</param>
             <param name="propertyTypeCollection">The output collection of properties discovered through reflection of the supplied classes.</param>
             <returns></returns>
         </member>
@@ -101,6 +102,186 @@
             </summary>
             <value>
             The class name constants to remove.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.RespectDataMemberAttribute">
+            <summary>
+            Gets or sets a value indicating whether to respect the DataMember name attribute when present.
+            </summary>
+            <value>
+            <c>true</c> if [respect data member attribute]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:Castle.Sharp2Js.PropertyBag">
+            <summary>
+            Responsible for storing data about the type models to be generated
+            </summary>
+        </member>
+        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag"/> class.
+            </summary>
+        </member>
+        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor(System.String,System.String,System.Type,System.Boolean,System.String,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag"/> class.
+            </summary>
+            <param name="typeName">Name of the type.</param>
+            <param name="propertyName">Name of the property.</param>
+            <param name="propertyType">Type of the property.</param>
+            <param name="isArray">if set to <c>true</c> [is array].</param>
+            <param name="propertyTypeName">Name of the property type.</param>
+            <param name="isPrimitiveType">if set to <c>true</c> [is primitive type].</param>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.TypeName">
+            <summary>
+            Gets or sets the name of the type.
+            </summary>
+            <value>
+            The name of the type.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.PropertyName">
+            <summary>
+            Gets or sets the name of the property.
+            </summary>
+            <value>
+            The name of the property.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.PropertyType">
+            <summary>
+            Gets or sets the type of the property.
+            </summary>
+            <value>
+            The type of the property.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.IsArray">
+            <summary>
+            Gets or sets a value indicating whether this instance is an array.
+            </summary>
+            <value>
+              <c>true</c> if this instance is an array; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.PropertyTypeName">
+            <summary>
+            Gets or sets the name of the property type.
+            </summary>
+            <value>
+            The name of the property type.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.IsPrimitiveType">
+            <summary>
+            Gets or sets a value indicating whether this instance is primitive type.
+            </summary>
+            <value>
+            <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:Castle.Sharp2Js.SampleData.AddressInformation">
+            <summary>
+            Demo class to show off some of the features of sharp2Js.
+            </summary>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.AddressInformation.Name">
+            <summary>
+            Gets or sets the name.
+            </summary>
+            <value>
+            The name.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.AddressInformation.Address">
+            <summary>
+            Gets or sets the address.
+            </summary>
+            <value>
+            The address.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.AddressInformation.ZipCode">
+            <summary>
+            Gets or sets the zip code.
+            </summary>
+            <value>
+            The zip code.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.AddressInformation.Owner">
+            <summary>
+            Gets or sets the owner.
+            </summary>
+            <value>
+            The owner.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.AddressInformation.Features">
+            <summary>
+            Gets or sets the features.
+            </summary>
+            <value>
+            The features.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.AddressInformation.Tags">
+            <summary>
+            Gets or sets the tags.
+            </summary>
+            <value>
+            The tags.
+            </value>
+        </member>
+        <member name="T:Castle.Sharp2Js.SampleData.OwnerInformation">
+            <summary>
+            Demo class to show off some of the features of sharp2Js.
+            </summary>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.OwnerInformation.FirstName">
+            <summary>
+            Gets or sets the first name.
+            </summary>
+            <value>
+            The first name.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.OwnerInformation.LastName">
+            <summary>
+            Gets or sets the last name.
+            </summary>
+            <value>
+            The last name.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.OwnerInformation.Age">
+            <summary>
+            Gets or sets the age.
+            </summary>
+            <value>
+            The age.
+            </value>
+        </member>
+        <member name="T:Castle.Sharp2Js.SampleData.Feature">
+            <summary>
+            Demo class to show off some of the features of sharp2Js.
+            </summary>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.Feature.Name">
+            <summary>
+            Gets or sets the name.
+            </summary>
+            <value>
+            The name.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.SampleData.Feature.Value">
+            <summary>
+            Gets or sets the value.
+            </summary>
+            <value>
+            The value.
             </value>
         </member>
     </members>
