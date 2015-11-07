@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Castle.Sharp2Js.SampleData
 {
     /// <summary>
     /// Demo class to show off some of the features of sharp2Js.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class AddressInformation
     {
         /// <summary>
@@ -54,6 +56,7 @@ namespace Castle.Sharp2Js.SampleData
     /// <summary>
     /// Demo class to show off some of the features of sharp2Js.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class OwnerInformation
     {
         /// <summary>
@@ -82,6 +85,7 @@ namespace Castle.Sharp2Js.SampleData
     /// <summary>
     /// Demo class to show off some of the features of sharp2Js.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class Feature
     {
         /// <summary>

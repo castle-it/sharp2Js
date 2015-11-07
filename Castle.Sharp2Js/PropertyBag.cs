@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Castle.Sharp2Js
 {
     /// <summary>
     /// Responsible for storing data about the type models to be generated
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class PropertyBag
     {
         /// <summary>
@@ -16,7 +18,7 @@ namespace Castle.Sharp2Js
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyBag"/> class.
+        /// Initializes a new instance of the <see cref="PropertyBag" /> class.
         /// </summary>
         /// <param name="typeName">Name of the type.</param>
         /// <param name="propertyName">Name of the property.</param>
@@ -24,8 +26,11 @@ namespace Castle.Sharp2Js
         /// <param name="isArray">if set to <c>true</c> [is array].</param>
         /// <param name="propertyTypeName">Name of the property type.</param>
         /// <param name="isPrimitiveType">if set to <c>true</c> [is primitive type].</param>
+        /// <param name="hasDefaultValue">if set to <c>true</c> [has default value].</param>
+        /// <param name="defaultValue">The default value.</param>
         public PropertyBag(string typeName, string propertyName, Type propertyType,
-            bool isArray, string propertyTypeName, bool isPrimitiveType)
+            bool isArray, string propertyTypeName, bool isPrimitiveType, bool hasDefaultValue,
+            object defaultValue)
         {
             TypeName = typeName;
             PropertyName = propertyName;
@@ -33,6 +38,8 @@ namespace Castle.Sharp2Js
             IsArray = isArray;
             PropertyTypeName = propertyTypeName;
             IsPrimitiveType = isPrimitiveType;
+            HasDefaultValue = hasDefaultValue;
+            DefaultValue = defaultValue;
         }
 
         /// <summary>
@@ -77,6 +84,19 @@ namespace Castle.Sharp2Js
         /// <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
         /// </value>
         public bool IsPrimitiveType { get; set; }
-
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance has a default value.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance has default value; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasDefaultValue { get; set; }
+        /// <summary>
+        /// Gets or sets the default value.
+        /// </summary>
+        /// <value>
+        /// The default value.
+        /// </value>
+        public object DefaultValue { get; set; }
     }
 }
