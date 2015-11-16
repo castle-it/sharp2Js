@@ -133,14 +133,17 @@ namespace Castle.Sharp2Js
                     }
                     else if (!propEntry.IsPrimitiveType)
                     {
+                        sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
+                        sb.AppendLine($"\tif (cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
                         sb.AppendLine(
-                            $"\tif (!overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }) {{");
+                            $"\t\tif (!overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }) {{");
                         sb.AppendLine(
-                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new {options.OutputNamespace}.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
-                        sb.AppendLine("\t} else {");
+                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new {options.OutputNamespace}.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
+                        sb.AppendLine("\t\t} else {");
                         sb.AppendLine(
-                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}, overrideObj);");
+                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}, overrideObj);");
 
+                        sb.AppendLine("\t\t}");
                         sb.AppendLine("\t}");
                     }
                     else
