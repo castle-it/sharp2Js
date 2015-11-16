@@ -256,8 +256,16 @@ namespace Castle.Sharp2Js
         {
             if (!camelCase) return input;
 
-            return input.Substring(0, 1).ToLower() +
-                input.Substring(1);
+            var s = input;
+            if (!char.IsUpper(s[0])) return s;
+
+            var cArr = s.ToCharArray();
+            for (var i = 0; i < cArr.Length; i++)
+            {
+                if (i > 0 && i + 1 < cArr.Length && !char.IsUpper(cArr[i + 1])) break;
+                cArr[i] = char.ToLowerInvariant(cArr[i]);
+            }
+            return new string(cArr);
         }
 
         /// <summary>
