@@ -43,5 +43,12 @@ namespace Castle.Sharp2Js.Tests.DTOs
     {
         public int SructValue { get; set; }
     }
+    [ExcludeFromCodeCoverage]
+    public class CamelCaseTest
+    {
+        public string WKTPolygon { get; set; }
+        public string alreadyUnderscored { get; set; }
+        public string RegularCased { get; set; }
+    }
 
 }
