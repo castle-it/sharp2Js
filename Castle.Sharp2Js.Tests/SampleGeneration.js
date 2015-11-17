@@ -8,10 +8,13 @@ models.AddressInformation = function (cons, overrideObj) {
 	this.Name = cons.Name;
 	this.Address = cons.Address;
 	this.ZipCode = cons.ZipCode;
-	if (!overrideObj.OwnerInformation) {
-		this.Owner = new models.OwnerInformation(cons.Owner);
-	} else {
-		this.Owner = new overrideObj.OwnerInformation(cons.Owner, overrideObj);
+	this.Owner = null;
+	if (cons.Owner) {
+		if (!overrideObj.OwnerInformation) {
+			this.Owner = new models.OwnerInformation(cons.Owner);
+		} else {
+			this.Owner = new overrideObj.OwnerInformation(cons.Owner, overrideObj);
+		}
 	}
 	this.Features = new Array(cons.Features == null ? 0 : cons.Features.length );
 	if(cons.Features != null) {
