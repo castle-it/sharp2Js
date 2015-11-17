@@ -112,6 +112,14 @@
             <c>true</c> if [respect data member attribute]; otherwise, <c>false</c>.
             </value>
         </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.RespectDefaultValueAttribute">
+            <summary>
+            Gets or sets a value indicating whether to respect the DefaultValue attribute when present..
+            </summary>
+            <value>
+              <c>true</c> if [respect default value attribute]; otherwise, <c>false</c>.
+            </value>
+        </member>
         <member name="T:Castle.Sharp2Js.PropertyBag">
             <summary>
             Responsible for storing data about the type models to be generated
@@ -122,9 +130,9 @@
             Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag"/> class.
             </summary>
         </member>
-        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor(System.String,System.String,System.Type,System.Boolean,System.String,System.Boolean)">
+        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor(System.String,System.String,System.Type,System.Boolean,System.String,System.Boolean,System.Boolean,System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag"/> class.
+            Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag" /> class.
             </summary>
             <param name="typeName">Name of the type.</param>
             <param name="propertyName">Name of the property.</param>
@@ -132,6 +140,8 @@
             <param name="isArray">if set to <c>true</c> [is array].</param>
             <param name="propertyTypeName">Name of the property type.</param>
             <param name="isPrimitiveType">if set to <c>true</c> [is primitive type].</param>
+            <param name="hasDefaultValue">if set to <c>true</c> [has default value].</param>
+            <param name="defaultValue">The default value.</param>
         </member>
         <member name="P:Castle.Sharp2Js.PropertyBag.TypeName">
             <summary>
@@ -179,6 +189,22 @@
             </summary>
             <value>
             <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.HasDefaultValue">
+            <summary>
+            Gets or sets a value indicating whether this instance has a default value.
+            </summary>
+            <value>
+            <c>true</c> if this instance has default value; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.DefaultValue">
+            <summary>
+            Gets or sets the default value.
+            </summary>
+            <value>
+            The default value.
             </value>
         </member>
         <member name="T:Castle.Sharp2Js.SampleData.AddressInformation">

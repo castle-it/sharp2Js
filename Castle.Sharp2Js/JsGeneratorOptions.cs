@@ -45,5 +45,13 @@ namespace Castle.Sharp2Js
         /// <c>true</c> if [respect data member attribute]; otherwise, <c>false</c>.
         /// </value>
         public bool RespectDataMemberAttribute { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to respect the DefaultValue attribute when present..
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [respect default value attribute]; otherwise, <c>false</c>.
+        /// </value>
+        public bool RespectDefaultValueAttribute { get; set; } = true;
     }
 }

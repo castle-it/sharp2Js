@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -28,8 +29,13 @@ namespace Castle.Sharp2Js
         /// <returns></returns>
         public static string Generate(IEnumerable<Type> typesToGenerate, JsGeneratorOptions generatorOptions = null)
         {
-            var propertyClassCollection = GetPropertyDictionaryForTypeGeneration(typesToGenerate, generatorOptions ?? Options);
-            var js = GenerateJs(propertyClassCollection, generatorOptions);
+            var passedOptions = generatorOptions ?? Options;
+            if (passedOptions == null)
+            {
+                throw new ArgumentNullException(nameof(passedOptions), "Options cannot be null.");
+            }
+            var propertyClassCollection = GetPropertyDictionaryForTypeGeneration(typesToGenerate, passedOptions);
+            var js = GenerateJs(propertyClassCollection, passedOptions);
             return js;
         }
 
@@ -64,13 +70,8 @@ namespace Castle.Sharp2Js
         /// <returns></returns>
         private static string GenerateJs(IEnumerable<PropertyBag> propertyCollection, JsGeneratorOptions generationOptions)
         {
-            var options = generationOptions ?? Options;
-
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options), "Options cannot be null.");
-            }
-
+            var options = generationOptions;
+            
             var sbOut = new StringBuilder();
 
             foreach (var type in propertyCollection.GroupBy(r => r.TypeName))
@@ -132,20 +133,41 @@ namespace Castle.Sharp2Js
                     }
                     else if (!propEntry.IsPrimitiveType)
                     {
+                        sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
+                        sb.AppendLine($"\tif (cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
                         sb.AppendLine(
-                            $"\tif (!overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }) {{");
+                            $"\t\tif (!overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }) {{");
                         sb.AppendLine(
-                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new {options.OutputNamespace}.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
-                        sb.AppendLine("\t} else {");
+                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new {options.OutputNamespace}.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
+                        sb.AppendLine("\t\t} else {");
                         sb.AppendLine(
-                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}, overrideObj);");
+                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}, overrideObj);");
 
+                        sb.AppendLine("\t\t}");
                         sb.AppendLine("\t}");
                     }
                     else
                     {
-                        sb.AppendLine(
+                        if (propEntry.HasDefaultValue)
+                        {
+                            sb.AppendLine(
+                            $"\tif (!cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                            sb.AppendLine(
+                                propEntry.PropertyType == typeof (string)
+                                    ? $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{propEntry.DefaultValue}';"
+                                    : $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {propEntry.DefaultValue};");
+                            sb.AppendLine("\t} else {");
+                            sb.AppendLine(
+                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
+                            sb.AppendLine("\t}");
+                            
+                        }
+                        else
+                        {
+                            sb.AppendLine(
                             $"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
+                        }
+                        
                     }
                 }
 
@@ -237,8 +259,16 @@ namespace Castle.Sharp2Js
         {
             if (!camelCase) return input;
 
-            return input.Substring(0, 1).ToLower() +
-                input.Substring(1);
+            var s = input;
+            if (!char.IsUpper(s[0])) return s;
+
+            var cArr = s.ToCharArray();
+            for (var i = 0; i < cArr.Length; i++)
+            {
+                if (i > 0 && i + 1 < cArr.Length && !char.IsUpper(cArr[i + 1])) break;
+                cArr[i] = char.ToLowerInvariant(cArr[i]);
+            }
+            return new string(cArr);
         }
 
         /// <summary>
@@ -282,7 +312,7 @@ namespace Castle.Sharp2Js
                                                   (elementType == typeof (string));
 
                                 propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, true,
-                                    elementType.Name, isPrimitive));
+                                    elementType.Name, isPrimitive, false, null));
 
                                 if (!isPrimitive)
                                 {
@@ -297,7 +327,7 @@ namespace Castle.Sharp2Js
                             else
                             {
                                 propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
-                                    propertyType.Name, false));
+                                    propertyType.Name, false, false, null));
                                 if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
                                 {
                                     propertyTypeCollection.AddRange(
@@ -308,8 +338,19 @@ namespace Castle.Sharp2Js
                         }
                         else
                         {
-                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
-                                string.Empty, true));
+                            var hasDefaultValue = HasDefaultValue(prop, generatorOptions);
+                            if (hasDefaultValue)
+                            {
+                                var val = ReadDefaultValueFromAttribute(prop, generatorOptions);
+                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
+                                string.Empty, true, true, val));
+                            }
+                            else
+                            {
+                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
+                                string.Empty, true, false, null));
+                            }
+                            
                         }
                     }
                 }
@@ -324,6 +365,25 @@ namespace Castle.Sharp2Js
             var customAttributes = propertyInfo.GetCustomAttributes(true);
 
             return customAttributes.All(p => (p as IgnoreDataMemberAttribute) == null);
+        }
+
+        private static bool HasDefaultValue(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
+        {
+            if (!generatorOptions.RespectDefaultValueAttribute) return false;
+
+            var customAttributes = propertyInfo.GetCustomAttributes(true);
+
+            if (customAttributes.All(p => (p as DefaultValueAttribute) == null)) return false;
+
+            return true;
+        }
+        private static object ReadDefaultValueFromAttribute(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
+        {
+            var customAttributes = propertyInfo.GetCustomAttributes(true);
+
+            var defaultValueAttribute = (DefaultValueAttribute)customAttributes.First(p => (p as DefaultValueAttribute) != null);
+
+            return defaultValueAttribute.Value;
         }
 
         private static string GetPropertyName(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
