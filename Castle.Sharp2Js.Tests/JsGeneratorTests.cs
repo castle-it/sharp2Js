@@ -348,6 +348,78 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
+
+        [Test]
+        public void InvalidDictionaryKeyHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(DictionaryKeyTesting);
+
+
+            var codeRanThrough = false;
+            try
+            {
+                JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+                {
+                    ClassNameConstantsToRemove = null,
+                    CamelCase = true,
+                    IncludeMergeFunction = false,
+                    OutputNamespace = "models",
+                    RespectDataMemberAttribute = false,
+                    RespectDefaultValueAttribute = false
+                });
+
+                codeRanThrough = true;
+
+            }
+            catch (Exception)
+            {
+                Assert.Pass();
+            }
+
+            if (codeRanThrough)
+            {
+                Assert.Fail("Expected exception generating type with incompatible dictionary key type.");
+            }
+
+        }
+
+        [Test]
+        public void CollectionHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(CollectionTesting);
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true
+            });
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+            
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+        }
+
     }
 
     

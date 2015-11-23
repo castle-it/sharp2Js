@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Castle.Sharp2Js
@@ -10,36 +11,27 @@ namespace Castle.Sharp2Js
     public class PropertyBag
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyBag"/> class.
-        /// </summary>
-        public PropertyBag()
-        {
-
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="PropertyBag" /> class.
         /// </summary>
         /// <param name="typeName">Name of the type.</param>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="propertyType">Type of the property.</param>
-        /// <param name="isArray">if set to <c>true</c> [is array].</param>
-        /// <param name="propertyTypeName">Name of the property type.</param>
-        /// <param name="isPrimitiveType">if set to <c>true</c> [is primitive type].</param>
+        /// <param name="collectionInnerTypes">The collection inner types.</param>
+        /// <param name="transformablePropertyType">Type of the transformable property.</param>
         /// <param name="hasDefaultValue">if set to <c>true</c> [has default value].</param>
         /// <param name="defaultValue">The default value.</param>
         public PropertyBag(string typeName, string propertyName, Type propertyType,
-            bool isArray, string propertyTypeName, bool isPrimitiveType, bool hasDefaultValue,
-            object defaultValue)
+            List<PropertyBagTypeInfo> collectionInnerTypes, 
+            TransformablePropertyTypeEnum transformablePropertyType,
+            bool hasDefaultValue, object defaultValue)
         {
             TypeName = typeName;
             PropertyName = propertyName;
             PropertyType = propertyType;
-            IsArray = isArray;
-            PropertyTypeName = propertyTypeName;
-            IsPrimitiveType = isPrimitiveType;
+            CollectionInnerTypes = collectionInnerTypes;
             HasDefaultValue = hasDefaultValue;
             DefaultValue = defaultValue;
+            TransformablePropertyType = transformablePropertyType;
         }
 
         /// <summary>
@@ -64,26 +56,20 @@ namespace Castle.Sharp2Js
         /// </value>
         public Type PropertyType { get; set; }
         /// <summary>
-        /// Gets or sets a value indicating whether this instance is an array.
+        /// Determines what class of object the transformer treats the object as 
+        /// which determines how the pieces are treated when writing Js objects.
         /// </summary>
         /// <value>
-        ///   <c>true</c> if this instance is an array; otherwise, <c>false</c>.
+        /// The type of the transformable property.
         /// </value>
-        public bool IsArray { get; set; }
+        public TransformablePropertyTypeEnum TransformablePropertyType { get; set; }
         /// <summary>
         /// Gets or sets the name of the property type.
         /// </summary>
         /// <value>
         /// The name of the property type.
         /// </value>
-        public string PropertyTypeName { get; set; }
-        /// <summary>
-        /// Gets or sets a value indicating whether this instance is primitive type.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsPrimitiveType { get; set; }
+        public List<PropertyBagTypeInfo> CollectionInnerTypes { get; set; }
         /// <summary>
         /// Gets or sets a value indicating whether this instance has a default value.
         /// </summary>
@@ -98,5 +84,58 @@ namespace Castle.Sharp2Js
         /// The default value.
         /// </value>
         public object DefaultValue { get; set; }
+
+
+        /// <summary>
+        /// Transformable property types understood by sharp2Js
+        /// </summary>
+        public enum TransformablePropertyTypeEnum
+        {
+            /// <summary>
+            /// The primitive
+            /// </summary>
+            Primitive = 1,
+            /// <summary>
+            /// The collection type
+            /// </summary>
+            CollectionType = 2,
+            /// <summary>
+            /// The dictionary type
+            /// </summary>
+            DictionaryType = 3,
+            /// <summary>
+            /// The reference type
+            /// </summary>
+            ReferenceType = 4
+        }
     }
+    /// <summary>
+    /// Contains types contained within collections and designations for dictionary types
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public class PropertyBagTypeInfo
+    {
+        /// <summary>
+        /// Gets or sets the type.
+        /// </summary>
+        /// <value>
+        /// The type.
+        /// </value>
+        public Type Type { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is the dictionary key.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance is the dictionary key; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsDictionaryKey { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is primitive type.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsPrimitiveType { get; set; }
+    }
+    
 }
