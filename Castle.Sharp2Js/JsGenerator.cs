@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -20,6 +21,13 @@ namespace Castle.Sharp2Js
         /// The options.
         /// </value>
         public static JsGeneratorOptions Options { get; set; } = new JsGeneratorOptions();
+
+        private static readonly List<Type> AllowedDictionaryKeyTypes = new List<Type>()
+        {
+            typeof(int),
+            typeof(string),
+            typeof(Enum)
+        }; 
 
         /// <summary>
         /// Generates a string containing js definitions of the provided types and all implied descendant types.
@@ -78,21 +86,14 @@ namespace Castle.Sharp2Js
             {
                 var sb = new StringBuilder();
 
-                if (type.Any(p => !p.IsPrimitiveType))
-                {
-                    sb.AppendLine(
-                        $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons, overrideObj) {{");
-                    sb.AppendLine("\tif (!overrideObj) { overrideObj = { }; }");
-                }
-                else
-                {
-                    sb.AppendLine(
-                        $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons) {{");
-                }
+                BuildClassConstructor(type, sb, options);
 
-                sb.AppendLine("\tif (!cons) { cons = { }; }");
-
-                if (type.Any(p => p.IsArray))
+                //initialize array variables if any are present in this type
+                if (
+                    type.Any(
+                        p =>
+                            p.TransformablePropertyType == PropertyBag.TransformablePropertyTypeEnum.CollectionType ||
+                            p.TransformablePropertyType == PropertyBag.TransformablePropertyTypeEnum.DictionaryType))
                 {
                     sb.AppendLine("\tvar i, length;");
                 }
@@ -102,138 +103,265 @@ namespace Castle.Sharp2Js
                 var propList = type.GroupBy(t => t.PropertyName).Select(t => t.First()).ToList();
                 foreach (var propEntry in propList)
                 {
-                    if (propEntry.IsArray)
+                    switch (propEntry.TransformablePropertyType)
                     {
-                        sb.AppendLine(string.Format("\tthis.{0} = new Array(cons.{0} == null ? 0 : cons.{1}.length );",
-                            ToCamelCase(propEntry.PropertyName, options.CamelCase),
-                            ToCamelCase(propEntry.PropertyName, options.CamelCase)));
-                        sb.AppendLine($"\tif(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
-                        sb.AppendLine(
-                            $"\t\tfor (i = 0, length = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i < length; i++) {{");
-
-                        if (!propEntry.IsPrimitiveType)
-                        {
-                            sb.AppendLine(
-                                $"\t\t\tif (!overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }) {{");
-                            sb.AppendLine(
-                                $"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] = new {options.OutputNamespace}.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i]);");
-                            sb.AppendLine("\t\t\t} else {");
-                            sb.AppendLine(
-                                $"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] = new overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i], overrideObj);");
-
-                            sb.AppendLine("\t\t\t}");
-                        }
-                        else
-                        {
-                            sb.AppendLine(
-                                $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i];");
-                        }
-                        sb.AppendLine("\t\t}");
-                        sb.AppendLine("\t}");
-                    }
-                    else if (!propEntry.IsPrimitiveType)
-                    {
-                        sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
-                        sb.AppendLine($"\tif (cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
-                        sb.AppendLine(
-                            $"\t\tif (!overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }) {{");
-                        sb.AppendLine(
-                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new {options.OutputNamespace}.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
-                        sb.AppendLine("\t\t} else {");
-                        sb.AppendLine(
-                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new overrideObj.{ GetName(propEntry.PropertyTypeName, options.ClassNameConstantsToRemove) }(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}, overrideObj);");
-
-                        sb.AppendLine("\t\t}");
-                        sb.AppendLine("\t}");
-                    }
-                    else
-                    {
-                        if (propEntry.HasDefaultValue)
-                        {
-                            sb.AppendLine(
-                            $"\tif (!cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
-                            sb.AppendLine(
-                                propEntry.PropertyType == typeof (string)
-                                    ? $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{propEntry.DefaultValue}';"
-                                    : $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {propEntry.DefaultValue};");
-                            sb.AppendLine("\t} else {");
-                            sb.AppendLine(
-                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
-                            sb.AppendLine("\t}");
-                            
-                        }
-                        else
-                        {
-                            sb.AppendLine(
-                            $"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
-                        }
-                        
+                        case PropertyBag.TransformablePropertyTypeEnum.CollectionType:
+                            BuildArrayProperty(sb, propEntry, options);
+                            break;
+                        case PropertyBag.TransformablePropertyTypeEnum.DictionaryType:
+                            BuildDictionaryProperty(sb, propEntry, options);
+                            break;
+                        case PropertyBag.TransformablePropertyTypeEnum.ReferenceType:
+                            BuildObjectProperty(sb, propEntry, options);
+                            break;
+                        case PropertyBag.TransformablePropertyTypeEnum.Primitive:
+                            BuildPrimitiveProperty(propEntry, sb, options);
+                            break;
                     }
                 }
 
                 if (options.IncludeMergeFunction)
                 {
-                    //Generate a merge function to merge two objects
-                    sb.AppendLine();
-                    sb.AppendLine("\tthis.$merge = function (mergeObj) {");
-                    sb.AppendLine("\t\tif (!mergeObj) { mergeObj = { }; }");
-                    foreach (var propEntry in propList)
-                    {
-                        if (propEntry.IsArray)
-                        {
-                            sb.AppendLine(
-                                $"\t\tif (!mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
-                            sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
-                            sb.AppendLine("\t\t}");
-                            sb.AppendLine(
-                                $"\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
-                            sb.AppendLine(string.Format("\t\t\tthis.{0}.splice(0, this.{0}.length);",
-                                ToCamelCase(propEntry.PropertyName, options.CamelCase)));
-                            sb.AppendLine("\t\t}");
-                            sb.AppendLine(
-                                $"\t\tif (mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
-                            sb.AppendLine(
-                                $"\t\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} === null) {{");
-                            sb.AppendLine($"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = [];");
-                            sb.AppendLine("\t\t\t}");
-                            sb.AppendLine(
-                                $"\t\t\tfor (i = 0; i < mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i++) {{");
-                            sb.AppendLine(string.Format("\t\t\t\tthis.{0}.push(mergeObj.{0}[i]);",
-                                ToCamelCase(propEntry.PropertyName, options.CamelCase)));
-                            sb.AppendLine("\t\t\t}");
-                            sb.AppendLine("\t\t}");
-
-                        }
-                        else if (!propEntry.IsPrimitiveType)
-                        {
-                            sb.AppendLine(
-                                $"\t\tif (mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} == null) {{");
-                            sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
-                            sb.AppendLine(
-                                $"\t\t}} else if (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
-                            sb.AppendLine(
-                                $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.$merge(mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
-                            sb.AppendLine("\t\t} else {");
-                            sb.AppendLine(
-                                $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
-                            sb.AppendLine("\t\t}");
-                        }
-                        else
-                        {
-                            sb.AppendLine(
-                                $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
-                        }
-
-                    }
-                    sb.AppendLine("\t}");
+                    BuildMergeFunctionForClass(sb, propList, options);
                 }
 
-                sb.AppendLine("}");
+                BuildClassClosure(sb);
+
                 sbOut.AppendLine(sb.ToString());
                 sbOut.AppendLine();
             }
 
             return sbOut.ToString();
+        }
+
+        private static void BuildClassClosure(StringBuilder sb)
+        {
+            sb.AppendLine("}");
+        }
+
+        private static void BuildClassConstructor(IGrouping<string, PropertyBag> type, StringBuilder sb, JsGeneratorOptions options)
+        {
+            if (
+                type.Any(
+                    p =>
+                        (p.CollectionInnerTypes != null && p.CollectionInnerTypes.Any(q => !q.IsPrimitiveType)) ||
+                        p.TransformablePropertyType == PropertyBag.TransformablePropertyTypeEnum.ReferenceType ))
+            {
+                sb.AppendLine(
+                    $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons, overrideObj) {{");
+                sb.AppendLine("\tif (!overrideObj) { overrideObj = { }; }");
+            }
+            else
+            {
+                sb.AppendLine(
+                    $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons) {{");
+            }
+
+            sb.AppendLine("\tif (!cons) { cons = { }; }");
+        }
+
+        private static void BuildMergeFunctionForClass(StringBuilder sb, List<PropertyBag> propList,
+            JsGeneratorOptions options)
+        {
+            //Generate a merge function to merge two objects
+            sb.AppendLine();
+            sb.AppendLine("\tthis.$merge = function (mergeObj) {");
+            sb.AppendLine("\t\tif (!mergeObj) { mergeObj = { }; }");
+            foreach (var propEntry in propList)
+            {
+                switch (propEntry.TransformablePropertyType)
+                {
+                    case PropertyBag.TransformablePropertyTypeEnum.CollectionType:
+                        sb.AppendLine(
+                            $"\t\tif (!mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
+                        sb.AppendLine("\t\t}");
+                        sb.AppendLine(
+                            $"\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
+                        sb.AppendLine(string.Format("\t\t\tthis.{0}.splice(0, this.{0}.length);",
+                            ToCamelCase(propEntry.PropertyName, options.CamelCase)));
+                        sb.AppendLine("\t\t}");
+                        sb.AppendLine(
+                            $"\t\tif (mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine(
+                            $"\t\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} === null) {{");
+                        sb.AppendLine($"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = [];");
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine(
+                            $"\t\t\tfor (i = 0; i < mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i++) {{");
+                        sb.AppendLine(string.Format("\t\t\t\tthis.{0}.push(mergeObj.{0}[i]);",
+                            ToCamelCase(propEntry.PropertyName, options.CamelCase)));
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine("\t\t}");
+                        break;
+                    case PropertyBag.TransformablePropertyTypeEnum.DictionaryType:
+                       /* sb.AppendLine(
+                            $"\t\tif (!mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {{}};");
+                        sb.AppendLine("\t\t}");*/
+                        sb.AppendLine(
+                            $"\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
+                        sb.AppendLine(
+                            $"\t\t\tfor (var key in this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine(
+                            $"\t\t\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.hasOwnProperty(key)) {{");
+                        sb.AppendLine(
+                            $"\t\t\t\t\tdelete this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key];");
+                        sb.AppendLine("\t\t\t\t}");
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine("\t\t}");
+                        sb.AppendLine(
+                            $"\t\tif (mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine(
+                            $"\t\t\tfor (var key in mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine(
+                            $"\t\t\t\tif (mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.hasOwnProperty(key)) {{");
+                        sb.AppendLine(
+                            $"\t\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key] = mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key];");
+                        sb.AppendLine("\t\t\t\t}");
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine("\t\t}");
+                       /* sb.AppendLine(
+                            $"\t\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} === null) {{");
+                        sb.AppendLine($"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = [];");
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine(
+                            $"\t\t\tfor (i = 0; i < mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i++) {{");
+                        sb.AppendLine(string.Format("\t\t\t\tthis.{0}.push(mergeObj.{0}[i]);",
+                            ToCamelCase(propEntry.PropertyName, options.CamelCase)));
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine("\t\t}");*/
+                        break;
+                    case PropertyBag.TransformablePropertyTypeEnum.ReferenceType:
+                        sb.AppendLine(
+                            $"\t\tif (mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} == null) {{");
+                        sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
+                        sb.AppendLine(
+                            $"\t\t}} else if (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
+                        sb.AppendLine(
+                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.$merge(mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
+                        sb.AppendLine("\t\t} else {");
+                        sb.AppendLine(
+                            $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
+                        sb.AppendLine("\t\t}");
+                        break;
+                    case PropertyBag.TransformablePropertyTypeEnum.Primitive:
+                        sb.AppendLine(
+                            $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
+                        break;
+                }
+            }
+            sb.AppendLine("\t}");
+        }
+
+        private static void BuildPrimitiveProperty(PropertyBag propEntry, StringBuilder sb, JsGeneratorOptions options)
+        {
+            if (propEntry.HasDefaultValue)
+            {
+                sb.AppendLine(
+                    $"\tif (!cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                sb.AppendLine(
+                    propEntry.PropertyType == typeof (string)
+                        ? $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{propEntry.DefaultValue}';"
+                        : $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {propEntry.DefaultValue};");
+                sb.AppendLine("\t} else {");
+                sb.AppendLine(
+                    $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
+                sb.AppendLine("\t}");
+            }
+            else
+            {
+                sb.AppendLine(
+                    $"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)};");
+            }
+        }
+
+        private static void BuildObjectProperty(StringBuilder sb, PropertyBag propEntry, JsGeneratorOptions options)
+        {
+            
+            sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
+            sb.AppendLine($"\tif (cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+            sb.AppendLine(
+                $"\t\tif (!overrideObj.{GetName(propEntry.PropertyType.Name, options.ClassNameConstantsToRemove)}) {{");
+            sb.AppendLine(
+                $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new {options.OutputNamespace}.{GetName(propEntry.PropertyType.Name, options.ClassNameConstantsToRemove)}(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)});");
+            sb.AppendLine("\t\t} else {");
+            sb.AppendLine(
+                $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = new overrideObj.{GetName(propEntry.PropertyType.Name, options.ClassNameConstantsToRemove)}(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}, overrideObj);");
+
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("\t}");
+        }
+
+        private static void BuildArrayProperty(StringBuilder sb, PropertyBag propEntry, JsGeneratorOptions options)
+        {
+            sb.AppendLine(string.Format("\tthis.{0} = new Array(cons.{0} == null ? 0 : cons.{1}.length );",
+                ToCamelCase(propEntry.PropertyName, options.CamelCase),
+                ToCamelCase(propEntry.PropertyName, options.CamelCase)));
+            sb.AppendLine($"\tif(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
+            sb.AppendLine(
+                $"\t\tfor (i = 0, length = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i < length; i++) {{");
+
+            var collectionType = propEntry.CollectionInnerTypes.First();
+
+            if (!collectionType.IsPrimitiveType)
+            {
+                sb.AppendLine(
+                    $"\t\t\tif (!overrideObj.{GetName(collectionType.Type.Name, options.ClassNameConstantsToRemove)}) {{");
+                sb.AppendLine(
+                    $"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] = new {options.OutputNamespace}.{GetName(collectionType.Type.Name, options.ClassNameConstantsToRemove)}(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i]);");
+                sb.AppendLine("\t\t\t} else {");
+                sb.AppendLine(
+                    $"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] = new overrideObj.{GetName(collectionType.Type.Name, options.ClassNameConstantsToRemove)}(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i], overrideObj);");
+
+                sb.AppendLine("\t\t\t}");
+            }
+            else
+            {
+                sb.AppendLine(
+                    $"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i];");
+            }
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("\t}");
+        }
+
+        private static void BuildDictionaryProperty(StringBuilder sb, PropertyBag propEntry, JsGeneratorOptions options)
+        {
+            sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {{}};");
+            sb.AppendLine($"\tif(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
+            sb.AppendLine(
+                $"\t\tfor (var key in cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+            sb.AppendLine(
+                $"\t\t\tif (cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.hasOwnProperty(key)) {{");
+
+            var keyType = propEntry.CollectionInnerTypes.First(p => p.IsDictionaryKey);
+            if (!AllowedDictionaryKeyTypes.Contains(keyType.Type))
+            {
+                throw new Exception(
+                    $"Dictionaries must have strings, enums, or integers as keys, error found in type: {propEntry.TypeName}");
+            }
+            var valueType = propEntry.CollectionInnerTypes.First(p => !p.IsDictionaryKey);
+
+            if (!valueType.IsPrimitiveType)
+            {
+                sb.AppendLine(
+                    $"\t\t\t\tif (!overrideObj.{GetName(valueType.Type.Name, options.ClassNameConstantsToRemove)}) {{");
+                sb.AppendLine(
+                    $"\t\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key] = new {options.OutputNamespace}.{GetName(valueType.Type.Name, options.ClassNameConstantsToRemove)}(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key]);");
+                sb.AppendLine("\t\t\t\t} else {");
+                sb.AppendLine(
+                    $"\t\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key] = new overrideObj.{GetName(valueType.Type.Name, options.ClassNameConstantsToRemove)}(cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key], overrideObj);");
+
+                sb.AppendLine("\t\t\t\t}");
+            }
+            else
+            {
+                sb.AppendLine(
+                    $"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key] = cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key];");
+            }
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("\t}");
         }
 
         /// <summary>
@@ -293,69 +421,137 @@ namespace Castle.Sharp2Js
                 var typeName = type.Name;
                 foreach (var prop in props)
                 {
-                    if (ShouldGenerateMember(prop, generatorOptions))
+                    if (!ShouldGenerateMember(prop, generatorOptions)) continue;
+
+                    var propertyName = GetPropertyName(prop, generatorOptions);
+                    var propertyType = prop.PropertyType;
+                    
+                    if (!IsPrimitive(propertyType))
                     {
-                        var propertyName = GetPropertyName(prop, generatorOptions);
-                        var propertyType = prop.PropertyType;
-
-                        if (!propertyType.IsPrimitive && !propertyType.IsValueType &&
-                            propertyType != typeof (string))
+                        if (IsCollectionType(propertyType))
                         {
+                            var collectionInnerTypes = GetCollectionInnerTypes(propertyType);
+                            var isDictionaryType = IsDictionaryType(propertyType);
 
-                            if ((propertyType.IsGenericType &&
-                                 propertyType.GetGenericTypeDefinition() == typeof (List<>)) || propertyType.IsArray)
+                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType,
+                                collectionInnerTypes, isDictionaryType
+                                    ? PropertyBag.TransformablePropertyTypeEnum.DictionaryType
+                                    : PropertyBag.TransformablePropertyTypeEnum.CollectionType, false, null));
+
+                            //if primitive, no need to reflect type
+                            if (collectionInnerTypes.All(p => p.IsPrimitiveType)) continue;
+
+                            foreach (var collectionInnerType in collectionInnerTypes.Where(p => !p.IsPrimitiveType))
                             {
-                                var elementType = propertyType.IsArray
-                                    ? propertyType.GetElementType()
-                                    : propertyType.GetGenericArguments()[0];
-                                var isPrimitive = elementType.IsPrimitive || elementType.IsValueType ||
-                                                  (elementType == typeof (string));
 
-                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, true,
-                                    elementType.Name, isPrimitive, false, null));
-
-                                if (!isPrimitive)
-                                {
-                                    if (propertyTypeCollection.All(p => p.TypeName != elementType.Name))
-                                    {
-                                        propertyTypeCollection.AddRange(
-                                            GetPropertyDictionaryForTypeGeneration(new[] {elementType},
-                                                generatorOptions, propertyTypeCollection));
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
-                                    propertyType.Name, false, false, null));
-                                if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
+                                if (propertyTypeCollection.All(p => p.TypeName != collectionInnerType.Type.Name))
                                 {
                                     propertyTypeCollection.AddRange(
-                                        GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
+                                        GetPropertyDictionaryForTypeGeneration(new[] {collectionInnerType.Type},
                                             generatorOptions, propertyTypeCollection));
                                 }
                             }
                         }
                         else
                         {
-                            var hasDefaultValue = HasDefaultValue(prop, generatorOptions);
-                            if (hasDefaultValue)
+                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType,
+                                null, PropertyBag.TransformablePropertyTypeEnum.ReferenceType, false, null));
+
+                            if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
                             {
-                                var val = ReadDefaultValueFromAttribute(prop, generatorOptions);
-                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
-                                string.Empty, true, true, val));
+                                propertyTypeCollection.AddRange(
+                                    GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
+                                        generatorOptions, propertyTypeCollection));
                             }
-                            else
-                            {
-                                propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, false,
-                                string.Empty, true, false, null));
-                            }
-                            
                         }
+                    }
+                    else
+                    {
+                        var hasDefaultValue = HasDefaultValue(prop, generatorOptions);
+                        if (hasDefaultValue)
+                        {
+                            var val = ReadDefaultValueFromAttribute(prop);
+                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, 
+                                null, PropertyBag.TransformablePropertyTypeEnum.Primitive, true, val));
+                        }
+                        else
+                        {
+                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, 
+                                null, PropertyBag.TransformablePropertyTypeEnum.Primitive, false, null));
+                        }
+                            
                     }
                 }
             }
             return propertyTypeCollection;
+        }
+
+        private static List<PropertyBagTypeInfo> GetCollectionInnerTypes(Type propertyType)
+        {
+            if (propertyType.IsArray)
+            {
+                return new List<PropertyBagTypeInfo>()
+                {
+                    new PropertyBagTypeInfo()
+                    {
+                        Type = propertyType.GetElementType(),
+                        IsPrimitiveType = IsPrimitive(propertyType.GetElementType())
+                    }
+                };
+            }
+
+            if (IsDictionaryType(propertyType))
+            {
+                return new List<PropertyBagTypeInfo>()
+                {
+                    new PropertyBagTypeInfo()
+                    {
+                        Type = propertyType.GetGenericArguments()[0],
+                        IsPrimitiveType = IsPrimitive(propertyType.GetGenericArguments()[0]),
+                        IsDictionaryKey = true
+                    },
+                    new PropertyBagTypeInfo()
+                    {
+                        Type = propertyType.GetGenericArguments()[1],
+                        IsPrimitiveType = IsPrimitive(propertyType.GetGenericArguments()[1])
+                    }
+                };
+            }
+
+            return new List<PropertyBagTypeInfo>()
+            {
+                new PropertyBagTypeInfo()
+                {
+                    Type =
+                        propertyType.GetGenericArguments().Any()
+                            ? propertyType.GetGenericArguments()[0]
+                            : typeof (string),
+                    IsPrimitiveType =
+                        IsPrimitive(propertyType.GetGenericArguments().Any()
+                            ? propertyType.GetGenericArguments()[0]
+                            : typeof (string))
+                }
+            };
+        }
+
+        private static bool IsCollectionType(Type propertyType)
+        {
+
+            return (propertyType.GetInterfaces().Contains(typeof (IList)) ||
+                    propertyType.GetInterfaces().Contains(typeof (ICollection)) ||
+                    propertyType.GetInterfaces().Contains(typeof (IDictionary)) || 
+                    propertyType.IsArray);
+        }
+
+        private static bool IsDictionaryType(Type propertyType)
+        {
+            return (propertyType.GetInterfaces().Contains(typeof(IDictionary)));
+        }
+
+        private static bool IsPrimitive(Type propertyType)
+        {
+            return propertyType.IsPrimitive || propertyType.IsValueType ||
+                   propertyType == typeof (string);
         }
 
         private static bool ShouldGenerateMember(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
@@ -377,7 +573,7 @@ namespace Castle.Sharp2Js
 
             return true;
         }
-        private static object ReadDefaultValueFromAttribute(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
+        private static object ReadDefaultValueFromAttribute(PropertyInfo propertyInfo)
         {
             var customAttributes = propertyInfo.GetCustomAttributes(true);
 
