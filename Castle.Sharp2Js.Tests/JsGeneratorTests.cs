@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using Castle.Sharp2Js.SampleData;
 using Castle.Sharp2Js.Tests.DTOs;
 using Jint.Parser.Ast;
@@ -407,6 +408,55 @@ namespace Castle.Sharp2Js.Tests
             var js = new Jint.Parser.JavaScriptParser();
 
             
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+        }
+
+        [Test]
+        public void CustomFunctionHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(CollectionTesting);
+
+            var outputJs = JsGenerator.Generate(new[] {modelType}, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() {"Dto"},
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                CustomFunctionProcessors =
+                    new List<Action<StringBuilder, IEnumerable<PropertyBag>, JsGeneratorOptions>>()
+                    {
+                        (builder, bags, arg3) =>
+                        {
+                            builder.AppendLine($"\tthis.helloWorld = function () {{");
+                            builder.AppendLine("\t\tconsole.log('hello');");
+                            builder.AppendLine("\t}");
+                        }
+                    }
+            });
+
+            
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            Assert.IsTrue(outputJs.Contains("this.helloWorld"));
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+
 
             try
             {

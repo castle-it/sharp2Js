@@ -122,7 +122,17 @@ namespace Castle.Sharp2Js
 
                 if (options.IncludeMergeFunction)
                 {
+                    sb.AppendLine();
                     BuildMergeFunctionForClass(sb, propList, options);
+                }
+
+                if (options.CustomFunctionProcessors?.Any() == true)
+                {
+                    foreach (var customProcessor in options.CustomFunctionProcessors)
+                    {
+                        sb.AppendLine();
+                        customProcessor(sb, propList, options);
+                    }
                 }
 
                 BuildClassClosure(sb);
@@ -134,18 +144,28 @@ namespace Castle.Sharp2Js
             return sbOut.ToString();
         }
 
+        /// <summary>
+        /// Builds the Js class closure.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
         private static void BuildClassClosure(StringBuilder sb)
         {
             sb.AppendLine("}");
         }
 
+        /// <summary>
+        /// Builds the class constructor.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="options">The options.</param>
         private static void BuildClassConstructor(IGrouping<string, PropertyBag> type, StringBuilder sb, JsGeneratorOptions options)
         {
             if (
                 type.Any(
                     p =>
                         (p.CollectionInnerTypes != null && p.CollectionInnerTypes.Any(q => !q.IsPrimitiveType)) ||
-                        p.TransformablePropertyType == PropertyBag.TransformablePropertyTypeEnum.ReferenceType ))
+                        p.TransformablePropertyType == PropertyBag.TransformablePropertyTypeEnum.ReferenceType))
             {
                 sb.AppendLine(
                     $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons, overrideObj) {{");
@@ -160,11 +180,16 @@ namespace Castle.Sharp2Js
             sb.AppendLine("\tif (!cons) { cons = { }; }");
         }
 
-        private static void BuildMergeFunctionForClass(StringBuilder sb, List<PropertyBag> propList,
-            JsGeneratorOptions options)
+        /// <summary>
+        /// Builds the merge function for a type.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="propList">The property list.</param>
+        /// <param name="options">The options.</param>
+        private static void BuildMergeFunctionForClass(StringBuilder sb, IEnumerable<PropertyBag> propList,
+                    JsGeneratorOptions options)
         {
             //Generate a merge function to merge two objects
-            sb.AppendLine();
             sb.AppendLine("\tthis.$merge = function (mergeObj) {");
             sb.AppendLine("\t\tif (!mergeObj) { mergeObj = { }; }");
             foreach (var propEntry in propList)
@@ -174,7 +199,7 @@ namespace Castle.Sharp2Js
                     case PropertyBag.TransformablePropertyTypeEnum.CollectionType:
                         sb.AppendLine(
                             $"\t\tif (!mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
-                        sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
+                        sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = [];");
                         sb.AppendLine("\t\t}");
                         sb.AppendLine(
                             $"\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
@@ -195,10 +220,6 @@ namespace Castle.Sharp2Js
                         sb.AppendLine("\t\t}");
                         break;
                     case PropertyBag.TransformablePropertyTypeEnum.DictionaryType:
-                       /* sb.AppendLine(
-                            $"\t\tif (!mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
-                        sb.AppendLine($"\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {{}};");
-                        sb.AppendLine("\t\t}");*/
                         sb.AppendLine(
                             $"\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");
                         sb.AppendLine(
@@ -221,16 +242,6 @@ namespace Castle.Sharp2Js
                         sb.AppendLine("\t\t\t\t}");
                         sb.AppendLine("\t\t\t}");
                         sb.AppendLine("\t\t}");
-                       /* sb.AppendLine(
-                            $"\t\t\tif (this.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} === null) {{");
-                        sb.AppendLine($"\t\t\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = [];");
-                        sb.AppendLine("\t\t\t}");
-                        sb.AppendLine(
-                            $"\t\t\tfor (i = 0; i < mergeObj.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i++) {{");
-                        sb.AppendLine(string.Format("\t\t\t\tthis.{0}.push(mergeObj.{0}[i]);",
-                            ToCamelCase(propEntry.PropertyName, options.CamelCase)));
-                        sb.AppendLine("\t\t\t}");
-                        sb.AppendLine("\t\t}");*/
                         break;
                     case PropertyBag.TransformablePropertyTypeEnum.ReferenceType:
                         sb.AppendLine(
@@ -254,6 +265,12 @@ namespace Castle.Sharp2Js
             sb.AppendLine("\t}");
         }
 
+        /// <summary>
+        /// Builds a primitive property.
+        /// </summary>
+        /// <param name="propEntry">The property entry.</param>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="options">The options.</param>
         private static void BuildPrimitiveProperty(PropertyBag propEntry, StringBuilder sb, JsGeneratorOptions options)
         {
             if (propEntry.HasDefaultValue)
@@ -261,7 +278,7 @@ namespace Castle.Sharp2Js
                 sb.AppendLine(
                     $"\tif (!cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
                 sb.AppendLine(
-                    propEntry.PropertyType == typeof (string)
+                    propEntry.PropertyType == typeof(string)
                         ? $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{propEntry.DefaultValue}';"
                         : $"\t\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {propEntry.DefaultValue};");
                 sb.AppendLine("\t} else {");
@@ -276,9 +293,15 @@ namespace Castle.Sharp2Js
             }
         }
 
+        /// <summary>
+        /// Builds an object/reference property.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="propEntry">The property entry.</param>
+        /// <param name="options">The options.</param>
         private static void BuildObjectProperty(StringBuilder sb, PropertyBag propEntry, JsGeneratorOptions options)
         {
-            
+
             sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = null;");
             sb.AppendLine($"\tif (cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
             sb.AppendLine(
@@ -293,6 +316,12 @@ namespace Castle.Sharp2Js
             sb.AppendLine("\t}");
         }
 
+        /// <summary>
+        /// Builds an array property.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="propEntry">The property entry.</param>
+        /// <param name="options">The options.</param>
         private static void BuildArrayProperty(StringBuilder sb, PropertyBag propEntry, JsGeneratorOptions options)
         {
             sb.AppendLine(string.Format("\tthis.{0} = new Array(cons.{0} == null ? 0 : cons.{1}.length );",
@@ -325,6 +354,12 @@ namespace Castle.Sharp2Js
             sb.AppendLine("\t}");
         }
 
+        /// <summary>
+        /// Builds a dictionary property.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="propEntry">The property entry.</param>
+        /// <param name="options">The options.</param>
         private static void BuildDictionaryProperty(StringBuilder sb, PropertyBag propEntry, JsGeneratorOptions options)
         {
             sb.AppendLine($"\tthis.{ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {{}};");
@@ -486,6 +521,11 @@ namespace Castle.Sharp2Js
             return propertyTypeCollection;
         }
 
+        /// <summary>
+        /// Gets inner types of collections and dictionaries.
+        /// </summary>
+        /// <param name="propertyType">Type of the property.</param>
+        /// <returns></returns>
         private static List<PropertyBagTypeInfo> GetCollectionInnerTypes(Type propertyType)
         {
             if (propertyType.IsArray)
@@ -534,26 +574,47 @@ namespace Castle.Sharp2Js
             };
         }
 
+        /// <summary>
+        /// Determines whether the specified property type is a collection.
+        /// </summary>
+        /// <param name="propertyType">Type of the property.</param>
+        /// <returns></returns>
         private static bool IsCollectionType(Type propertyType)
         {
 
-            return (propertyType.GetInterfaces().Contains(typeof (IList)) ||
-                    propertyType.GetInterfaces().Contains(typeof (ICollection)) ||
-                    propertyType.GetInterfaces().Contains(typeof (IDictionary)) || 
+            return (propertyType.GetInterfaces().Contains(typeof(IList)) ||
+                    propertyType.GetInterfaces().Contains(typeof(ICollection)) ||
+                    propertyType.GetInterfaces().Contains(typeof(IDictionary)) ||
                     propertyType.IsArray);
         }
 
+        /// <summary>
+        /// Determines whether the specified property type is a dictionary.
+        /// </summary>
+        /// <param name="propertyType">Type of the property.</param>
+        /// <returns></returns>
         private static bool IsDictionaryType(Type propertyType)
         {
             return (propertyType.GetInterfaces().Contains(typeof(IDictionary)));
         }
 
+        /// <summary>
+        /// Determines whether the specified property type is primitive.
+        /// </summary>
+        /// <param name="propertyType">Type of the property.</param>
+        /// <returns></returns>
         private static bool IsPrimitive(Type propertyType)
         {
             return propertyType.IsPrimitive || propertyType.IsValueType ||
-                   propertyType == typeof (string);
+                   propertyType == typeof(string);
         }
 
+        /// <summary>
+        /// Determines whether the property should be generated in the Js model.
+        /// </summary>
+        /// <param name="propertyInfo">The property information.</param>
+        /// <param name="generatorOptions">The generator options.</param>
+        /// <returns></returns>
         private static bool ShouldGenerateMember(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
         {
             if (!generatorOptions.RespectDataMemberAttribute) return true;
@@ -563,6 +624,12 @@ namespace Castle.Sharp2Js
             return customAttributes.All(p => (p as IgnoreDataMemberAttribute) == null);
         }
 
+        /// <summary>
+        /// Determines whether the property has a default value specified by the DefaultValue attribute.
+        /// </summary>
+        /// <param name="propertyInfo">The property information.</param>
+        /// <param name="generatorOptions">The generator options.</param>
+        /// <returns></returns>
         private static bool HasDefaultValue(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
         {
             if (!generatorOptions.RespectDefaultValueAttribute) return false;
@@ -573,6 +640,11 @@ namespace Castle.Sharp2Js
 
             return true;
         }
+        /// <summary>
+        /// Reads the default value from the attribute.
+        /// </summary>
+        /// <param name="propertyInfo">The property information.</param>
+        /// <returns></returns>
         private static object ReadDefaultValueFromAttribute(PropertyInfo propertyInfo)
         {
             var customAttributes = propertyInfo.GetCustomAttributes(true);
@@ -582,6 +654,12 @@ namespace Castle.Sharp2Js
             return defaultValueAttribute.Value;
         }
 
+        /// <summary>
+        /// Gets the name of the property.
+        /// </summary>
+        /// <param name="propertyInfo">The property information.</param>
+        /// <param name="generatorOptions">The generator options.</param>
+        /// <returns></returns>
         private static string GetPropertyName(PropertyInfo propertyInfo, JsGeneratorOptions generatorOptions)
         {
             if (!generatorOptions.RespectDataMemberAttribute) return propertyInfo.Name;
