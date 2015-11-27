@@ -84,6 +84,8 @@ namespace Castle.Sharp2Js
 
             foreach (var type in propertyCollection.GroupBy(r => r.TypeName))
             {
+                var typeDefinition = type.First().TypeDefinition;
+
                 var sb = new StringBuilder();
 
                 BuildClassConstructor(type, sb, options);
@@ -120,7 +122,7 @@ namespace Castle.Sharp2Js
                     }
                 }
 
-                if (options.IncludeMergeFunction)
+                if (options.IncludeMergeFunction && !typeDefinition.IsEnum)
                 {
                     sb.AppendLine();
                     BuildMergeFunctionForClass(sb, propList, options);
@@ -170,14 +172,21 @@ namespace Castle.Sharp2Js
                 sb.AppendLine(
                     $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons, overrideObj) {{");
                 sb.AppendLine("\tif (!overrideObj) { overrideObj = { }; }");
+                sb.AppendLine("\tif (!cons) { cons = { }; }");
+            }
+            else if (type.First().TypeDefinition.IsEnum)
+            {
+                sb.AppendLine(
+                    $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = {{");
             }
             else
             {
                 sb.AppendLine(
                     $"{options.OutputNamespace}.{GetName(type.First().TypeName, options.ClassNameConstantsToRemove)} = function (cons) {{");
-            }
 
-            sb.AppendLine("\tif (!cons) { cons = { }; }");
+                sb.AppendLine("\tif (!cons) { cons = { }; }");
+            }
+            
         }
 
         /// <summary>
@@ -273,7 +282,14 @@ namespace Castle.Sharp2Js
         /// <param name="options">The options.</param>
         private static void BuildPrimitiveProperty(PropertyBag propEntry, StringBuilder sb, JsGeneratorOptions options)
         {
-            if (propEntry.HasDefaultValue)
+            if (propEntry.TypeDefinition.IsEnum)
+            {
+                sb.AppendLine(
+                    propEntry.PropertyType == typeof(string)
+                        ? $"\t{ToCamelCase(propEntry.PropertyName, options.CamelCase)}: '{propEntry.DefaultValue}',"
+                        : $"\t{ToCamelCase(propEntry.PropertyName, options.CamelCase)}: {propEntry.DefaultValue},");
+            }
+            else if (propEntry.HasDefaultValue)
             {
                 sb.AppendLine(
                     $"\tif (!cons.{ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
@@ -451,70 +467,107 @@ namespace Castle.Sharp2Js
             }
             foreach (var type in types)
             {
-
-                var props = type.GetProperties();
-                var typeName = type.Name;
-                foreach (var prop in props)
+                if (type.IsEnum)
                 {
-                    if (!ShouldGenerateMember(prop, generatorOptions)) continue;
-
-                    var propertyName = GetPropertyName(prop, generatorOptions);
-                    var propertyType = prop.PropertyType;
-                    
-                    if (!IsPrimitive(propertyType))
+                    var getVals = type.GetEnumNames();
+                    var typeName = type.Name;
+                    var index = 0;
+                    foreach (var enumVal in getVals)
                     {
-                        if (IsCollectionType(propertyType))
+                        if (generatorOptions.TreatEnumsAsStrings)
                         {
-                            var collectionInnerTypes = GetCollectionInnerTypes(propertyType);
-                            var isDictionaryType = IsDictionaryType(propertyType);
+                            propertyTypeCollection.Add(new PropertyBag(typeName, type, enumVal, typeof (string),
+                                null, PropertyBag.TransformablePropertyTypeEnum.Primitive, true, enumVal));
+                        }
+                        else
+                        {
+                            var trueVal = Convert.ChangeType(Enum.Parse(type, enumVal), type.GetEnumUnderlyingType());
+                            propertyTypeCollection.Add(new PropertyBag(typeName, type, enumVal, type.GetEnumUnderlyingType(),
+                                null, PropertyBag.TransformablePropertyTypeEnum.Primitive, true, trueVal));
+                            //if (int.TryParse(Enum(type, enumVal), out intVal))
+                        }
 
-                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType,
-                                collectionInnerTypes, isDictionaryType
-                                    ? PropertyBag.TransformablePropertyTypeEnum.DictionaryType
-                                    : PropertyBag.TransformablePropertyTypeEnum.CollectionType, false, null));
+                        index++;
+                    }
+                    
 
-                            //if primitive, no need to reflect type
-                            if (collectionInnerTypes.All(p => p.IsPrimitiveType)) continue;
+                }
+                else
+                {
+                    var props = type.GetProperties();
+                    var typeName = type.Name;
+                    foreach (var prop in props)
+                    {
+                        if (!ShouldGenerateMember(prop, generatorOptions)) continue;
 
-                            foreach (var collectionInnerType in collectionInnerTypes.Where(p => !p.IsPrimitiveType))
+                        var propertyName = GetPropertyName(prop, generatorOptions);
+                        var propertyType = prop.PropertyType;
+
+                        if (!IsPrimitive(propertyType))
+                        {
+                            if (IsCollectionType(propertyType))
                             {
+                                var collectionInnerTypes = GetCollectionInnerTypes(propertyType);
+                                var isDictionaryType = IsDictionaryType(propertyType);
 
-                                if (propertyTypeCollection.All(p => p.TypeName != collectionInnerType.Type.Name))
+                                propertyTypeCollection.Add(new PropertyBag(typeName, type, propertyName, propertyType,
+                                    collectionInnerTypes, isDictionaryType
+                                        ? PropertyBag.TransformablePropertyTypeEnum.DictionaryType
+                                        : PropertyBag.TransformablePropertyTypeEnum.CollectionType, false, null));
+
+                                //if primitive, no need to reflect type
+                                if (collectionInnerTypes.All(p => p.IsPrimitiveType)) continue;
+
+                                foreach (var collectionInnerType in collectionInnerTypes.Where(p => !p.IsPrimitiveType))
+                                {
+
+                                    if (propertyTypeCollection.All(p => p.TypeName != collectionInnerType.Type.Name))
+                                    {
+                                        propertyTypeCollection.AddRange(
+                                            GetPropertyDictionaryForTypeGeneration(new[] {collectionInnerType.Type},
+                                                generatorOptions, propertyTypeCollection));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                propertyTypeCollection.Add(new PropertyBag(typeName, type, propertyName, propertyType,
+                                    null, PropertyBag.TransformablePropertyTypeEnum.ReferenceType, false, null));
+
+                                if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
                                 {
                                     propertyTypeCollection.AddRange(
-                                        GetPropertyDictionaryForTypeGeneration(new[] {collectionInnerType.Type},
+                                        GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
                                             generatorOptions, propertyTypeCollection));
                                 }
                             }
                         }
                         else
                         {
-                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType,
-                                null, PropertyBag.TransformablePropertyTypeEnum.ReferenceType, false, null));
-
-                            if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
+                            var hasDefaultValue = HasDefaultValue(prop, generatorOptions);
+                            if (hasDefaultValue)
                             {
-                                propertyTypeCollection.AddRange(
-                                    GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
-                                        generatorOptions, propertyTypeCollection));
+                                var val = ReadDefaultValueFromAttribute(prop);
+                                propertyTypeCollection.Add(new PropertyBag(typeName, type, propertyName, propertyType,
+                                    null, PropertyBag.TransformablePropertyTypeEnum.Primitive, true, val));
                             }
+                            else
+                            {
+                                propertyTypeCollection.Add(new PropertyBag(typeName, type, propertyName, propertyType,
+                                    null, PropertyBag.TransformablePropertyTypeEnum.Primitive, false, null));
+                            }
+
+                            if (propertyType.IsEnum)
+                            {
+                                if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
+                                {
+                                    propertyTypeCollection.AddRange(
+                                        GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
+                                            generatorOptions, propertyTypeCollection));
+                                }
+                            }
+
                         }
-                    }
-                    else
-                    {
-                        var hasDefaultValue = HasDefaultValue(prop, generatorOptions);
-                        if (hasDefaultValue)
-                        {
-                            var val = ReadDefaultValueFromAttribute(prop);
-                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, 
-                                null, PropertyBag.TransformablePropertyTypeEnum.Primitive, true, val));
-                        }
-                        else
-                        {
-                            propertyTypeCollection.Add(new PropertyBag(typeName, propertyName, propertyType, 
-                                null, PropertyBag.TransformablePropertyTypeEnum.Primitive, false, null));
-                        }
-                            
                     }
                 }
             }
@@ -535,7 +588,8 @@ namespace Castle.Sharp2Js
                     new PropertyBagTypeInfo()
                     {
                         Type = propertyType.GetElementType(),
-                        IsPrimitiveType = IsPrimitive(propertyType.GetElementType())
+                        IsPrimitiveType = IsPrimitive(propertyType.GetElementType()),
+                        IsEnumType = propertyType.IsEnum
                     }
                 };
             }
@@ -548,12 +602,14 @@ namespace Castle.Sharp2Js
                     {
                         Type = propertyType.GetGenericArguments()[0],
                         IsPrimitiveType = IsPrimitive(propertyType.GetGenericArguments()[0]),
-                        IsDictionaryKey = true
+                        IsDictionaryKey = true,
+                        IsEnumType = propertyType.GetGenericArguments()[0].IsEnum
                     },
                     new PropertyBagTypeInfo()
                     {
                         Type = propertyType.GetGenericArguments()[1],
-                        IsPrimitiveType = IsPrimitive(propertyType.GetGenericArguments()[1])
+                        IsPrimitiveType = IsPrimitive(propertyType.GetGenericArguments()[1]),
+                        IsEnumType = propertyType.GetGenericArguments()[1].IsEnum
                     }
                 };
             }
@@ -569,7 +625,10 @@ namespace Castle.Sharp2Js
                     IsPrimitiveType =
                         IsPrimitive(propertyType.GetGenericArguments().Any()
                             ? propertyType.GetGenericArguments()[0]
-                            : typeof (string))
+                            : typeof (string)),
+                    IsEnumType = (propertyType.GetGenericArguments().Any()
+                            ? propertyType.GetGenericArguments()[0]
+                            : typeof (string)).IsEnum
                 }
             };
         }

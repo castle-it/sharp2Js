@@ -31,5 +31,33 @@ namespace Castle.Sharp2Js.Tests
 
             string res = Jil.JSON.Serialize(collectionObj);
         }
+
+        [Test]
+        public void TestJilEnumSerialization()
+        {
+            var collectionObj = new EnumTesting()
+            {
+                EnumTest1 = EnumTest1.EnumVal1,
+                EnumTest2 = EnumTest2.EnumVal2
+            };
+
+            
+
+            string res = Jil.JSON.Serialize(collectionObj);
+        }
+
+        [Test]
+        public void TestNewtonSoftEnumSerialization()
+        {
+            var collectionObj = new EnumTesting()
+            {
+                EnumTest1 = EnumTest1.EnumVal2,
+                EnumTest2 = EnumTest2.EnumVal2
+            };
+
+            
+
+            string res = Newtonsoft.Json.JsonConvert.SerializeObject(collectionObj);
+        }
     }
 }

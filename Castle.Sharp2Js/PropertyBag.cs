@@ -14,13 +14,14 @@ namespace Castle.Sharp2Js
         /// Initializes a new instance of the <see cref="PropertyBag" /> class.
         /// </summary>
         /// <param name="typeName">Name of the type.</param>
+        /// <param name="typeDefinition">The type definition.</param>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="propertyType">Type of the property.</param>
         /// <param name="collectionInnerTypes">The collection inner types.</param>
         /// <param name="transformablePropertyType">Type of the transformable property.</param>
         /// <param name="hasDefaultValue">if set to <c>true</c> [has default value].</param>
         /// <param name="defaultValue">The default value.</param>
-        public PropertyBag(string typeName, string propertyName, Type propertyType,
+        public PropertyBag(string typeName, Type typeDefinition, string propertyName, Type propertyType,
             List<PropertyBagTypeInfo> collectionInnerTypes, 
             TransformablePropertyTypeEnum transformablePropertyType,
             bool hasDefaultValue, object defaultValue)
@@ -32,6 +33,7 @@ namespace Castle.Sharp2Js
             HasDefaultValue = hasDefaultValue;
             DefaultValue = defaultValue;
             TransformablePropertyType = transformablePropertyType;
+            TypeDefinition = typeDefinition;
         }
 
         /// <summary>
@@ -84,7 +86,13 @@ namespace Castle.Sharp2Js
         /// The default value.
         /// </value>
         public object DefaultValue { get; set; }
-
+        /// <summary>
+        /// Gets or sets the type definition.
+        /// </summary>
+        /// <value>
+        /// The type definition.
+        /// </value>
+        public Type TypeDefinition { get; set; }
 
         /// <summary>
         /// Transformable property types understood by sharp2Js
@@ -136,6 +144,14 @@ namespace Castle.Sharp2Js
         /// <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
         /// </value>
         public bool IsPrimitiveType { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is enum type.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance is enum type; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsEnumType { get; set; }
     }
     
 }

@@ -157,6 +157,23 @@ namespace Castle.Sharp2Js.Tests.DTOs
 
     }
 
+    [ExcludeFromCodeCoverage]
+    public class EnumTesting
+    {
+        public EnumTest1 EnumTest1 { get; set; }
+        public EnumTest2 EnumTest2 { get; set; }
+    }
 
+    public enum EnumTest1
+    {
+        EnumVal1,
+        EnumVal2
+    }
+
+    public enum EnumTest2
+    {
+        EnumVal1 = 1,
+        EnumVal2 = 2
+    }
 
 }
