@@ -470,6 +470,72 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
+        [Test]
+        public void EnumHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(EnumTesting);
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                
+            });
+
+
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+            outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                TreatEnumsAsStrings = true
+            });
+
+
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+
+            
+
+
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+        }
+
     }
 
     

@@ -63,5 +63,13 @@ namespace Castle.Sharp2Js
         /// The custom function processors.
         /// </value>
         public List<Action<StringBuilder, IEnumerable<PropertyBag>, JsGeneratorOptions>> CustomFunctionProcessors { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether enum values should be treated as strings (the default for serializers like Jil) instead of ints.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [treat enums as strings]; otherwise, <c>false</c>.
+        /// </value>
+        public bool TreatEnumsAsStrings { get; set; }
     }
 }
