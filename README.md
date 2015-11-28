@@ -3,17 +3,23 @@
 
 `sharp2Js` is a small library that can create javascript objects that mirror your `C#` POCO classes and can be easily used to generate js files using `T4` templates.
 
-Features (v1.2.0)
+Features (v1.3.0)
 --
 * Optionally generates merge map function to make applying model changes easy
-* Handle custom types, primitives, arrays, recursive types, structs, and `List<T>`
+* Handle custom types, primitives, arrays, recursive types, structs, enums, and collections (`IList`, `ICollection`, `IDictionary`)
 * Allows for an override constructor if you need to wrap the created objects (e.g. for Angular)
 * Outputs to string for easy addition to `T4` template output or otherwise
 * Supports optional camel casing
 * Supports optional automatic removal of phrases like Dto, etc.
 * Supports the `[DefaultValue]` attribute for primitive types
 * Supports `[IgnoreDataMember]` and `[DataMember]` attributes
+* Supports custom function injection into generated Js objects
 * Test Coverage at 100%
+
+Examples/How-to
+--
+* [Getting Started](https://github.com/castle-it/sharp2Js/wiki/Getting-Started)
+* [Integrating with AngularJs](https://github.com/castle-it/sharp2Js/wiki/Integrating-with-AngularJs)
 
 Installation
 ---
@@ -97,48 +103,6 @@ models.AddressInformation = function (cons, overrideObj) {
 			this.Tags[i] = cons.Tags[i];
 		}
 	}
-
-	this.$merge = function (mergeObj) {
-		if (!mergeObj) { mergeObj = { }; }
-		this.Name = mergeObj.Name;
-		this.Address = mergeObj.Address;
-		this.ZipCode = mergeObj.ZipCode;
-		if (mergeObj.Owner == null) {
-			this.Owner = null;
-		} else if (this.Owner != null) {
-			this.Owner.$merge(mergeObj.Owner);
-		} else {
-			this.Owner = mergeObj.Owner;
-		}
-		if (!mergeObj.Features) {
-			this.Features = null;
-		}
-		if (this.Features != null) {
-			this.Features.splice(0, this.Features.length);
-		}
-		if (mergeObj.Features) {
-			if (this.Features === null) {
-				this.Features = [];
-			}
-			for (i = 0; i < mergeObj.Features.length; i++) {
-				this.Features.push(mergeObj.Features[i]);
-			}
-		}
-		if (!mergeObj.Tags) {
-			this.Tags = null;
-		}
-		if (this.Tags != null) {
-			this.Tags.splice(0, this.Tags.length);
-		}
-		if (mergeObj.Tags) {
-			if (this.Tags === null) {
-				this.Tags = [];
-			}
-			for (i = 0; i < mergeObj.Tags.length; i++) {
-				this.Tags.push(mergeObj.Tags[i]);
-			}
-		}
-	}
 }
 
 
@@ -148,13 +112,6 @@ models.OwnerInformation = function (cons) {
 	this.FirstName = cons.FirstName;
 	this.LastName = cons.LastName;
 	this.Age = cons.Age;
-
-	this.$merge = function (mergeObj) {
-		if (!mergeObj) { mergeObj = { }; }
-		this.FirstName = mergeObj.FirstName;
-		this.LastName = mergeObj.LastName;
-		this.Age = mergeObj.Age;
-	}
 }
 
 
@@ -163,256 +120,10 @@ models.Feature = function (cons) {
 
 	this.Name = cons.Name;
 	this.Value = cons.Value;
-
-	this.$merge = function (mergeObj) {
-		if (!mergeObj) { mergeObj = { }; }
-		this.Name = mergeObj.Name;
-		this.Value = mergeObj.Value;
-	}
 }
 
 ```
-AngularJs
---
-Our use cases revolved around using AngularJs and using models to manage the data in our services and directives allowing for easy newing up of models and having calculated fields of methods to use with the model.
 
-We allow for simple wrapping of the objects if you need dependency injection as well as allowing for overriding object definitions down the tree of complex objects.
-
-Simple Angular Dependency Wrapping
-```JavaScript
-(function () {
-    angular.module('models.AddressInformation', []).factory('AddressInformation', AddressInformationModel);
-
-    AddressInformationModel.$inject = [];
-
-    function AddressInformationModel() {
-        /**
-         * @class AddressInformation
-         * @description AddressInformation is a an object defined in C# code
-         * @constructor
-         */
-        function AddressInformation(addressInformation) {
-            if(!addressInformation)
-                throw 'Cannot create a new AddressInformation: Please pass existing AddressInformation object or empty object to create new AddressInformation';
-            models.AddressInformation.apply(this, [addressInformation]);
-        }
-
-        AddressInformation.prototype = models.AddressInformation.prototype;
-        AddressInformation.prototype.constructor = AddressInformation;
-        return AddressInformation;
-    }
-}());
-
-(function(){
-    angular.module('myApp.services', ['models.AddressInformation']).factory('addressService', addressService);
-    addressService.$inject = ['AddressInformation'];
-    function addressService(AddressInformation) {
-    	var service = {
-    		getDefaultAddressInformation: getDefaultAddressInformation
-    	};
-    	return service;
-    	
-    	function getDefaultAddressInformation() {
-    		return new AddressInformation({
-    			tags: ['New Address'],
-    			zipCode: 27513
-    		});
-    	}
-    }
-}());
-```
-Extending Model Functionality, we use underscode '_' for any properties or methods generated in javascript code, not for any particular reason, just for pattern consistency and readability. Any '_myProperty' you then know is maintained by JS extentions.
-```JavaScript
-(function () {
-    angular.module('models.AddressInformation', []).factory('AddressInformation', AddressInformationModel);
-
-    AddressInformationModel.$inject = ['$filter'];
-
-    function AddressInformationModel($filter) {
-        /**
-         * @class AddressInformation
-         * @description AddressInformation is a an object defined in C# code
-         * @constructor
-         */
-        function AddressInformation(addressInformation) {
-            if(!addressInformation)
-                throw 'Cannot create a new AddressInformation: Please pass existing AddressInformation object or empty object to create new AddressInformation';
-            models.AddressInformation.apply(this, [addressInformation]);
-            
-            //Calculated fields 
-            this.__defineGetter__('_googleMapsCityName', function () {
-                return $filter('zipcodeToGoogleMapsCityName')(this.zipCode);
-            });
-            
-            this._myVar = 'This is JS extensions';
-        }
-
-        AddressInformation.prototype = models.AddressInformation.prototype;
-        AddressInformation.prototype.constructor = AddressInformation;
-        AddressInformation.prototype.getValidationError = getValidationError;
-        return AddressInformation;
-        
-        //validation requires atleast a name
-        function getValidationError() {
-        	if(!this.name)
-        	    return 'Address Information requires a name.';
-        	return null;
-        }
-    }
-}());
-
-(function(){
-    angular.module('myApp.services', ['models.AddressInformation']).factory('addressService', addressService);
-    addressService.$inject = ['AddressInformation', '$q', '$http'];
-    function addressService(AddressInformation, $q, $http) {
-    	var service = {
-    		getDefaultAddressInformation: getDefaultAddressInformation,
-    		saveAddressInformation: saveAddressInformation
-    	};
-    	return service;
-    	
-    	function getDefaultAddressInformation() {
-    		return new AddressInformation({
-    			tags: ['New Address'],
-    			zipCode: 27513
-    		});
-    	}
-    	
-    	function saveAddressInformation(addressInformation) {
-    		return $q(function(resolve, reject){
-    			//cast into the JS object, just in case we are not
-    			addressInformation = new AddressInformation(addressInformation);
-    			var error = addressInformation.getValidationError();
-    			if(error) {
-    				reject(error)
-    			} else {
-    				$http();//.....
-    			}
-    		});
-    	}
-    }
-}());
-```
-
-Sometimes you override child objects, such as Owner Information and need some JS extentions there as well, This can be achieved by using overrides as a second param to the javascript constructor
-
-```JavaScript
-(function () {
-    angular.module('models.AddressInformation', ['models.OwnerInformation']).factory('AddressInformation', AddressInformationModel);
-
-    AddressInformationModel.$inject = ['$filter', 'OwnerInformation'];
-
-    function AddressInformationModel($filter, OwnerInformation) {
-        /**
-         * @class AddressInformation
-         * @description AddressInformation is a an object defined in C# code
-         * @constructor
-         */
-        function AddressInformation(addressInformation) {
-            if(!addressInformation)
-                throw 'Cannot create a new AddressInformation: Please pass existing AddressInformation object or empty object to create new AddressInformation';
-                
-            //use the angular defined object as the model when we create it as a dependency    
-            var overrides = {
-            	OwnerInformation: OwnerInformation
-            }
-            models.AddressInformation.apply(this, [addressInformation, overrides]);
-            
-            //Calculated fields 
-            this.__defineGetter__('_googleMapsCityName', function () {
-            	//HTML Binding <span>{{addressInformation._googleMapsCityName}}</span>
-                return $filter('zipcodeToGoogleMapsCityName')(this.zipCode);
-            });
-            
-            this._myVar = 'This is JS extensions';
-        }
-
-        AddressInformation.prototype = models.AddressInformation.prototype;
-        AddressInformation.prototype.constructor = AddressInformation;
-        AddressInformation.prototype.getValidationError = getValidationError;
-        return AddressInformation;
-        
-        //validation requires atleast a name
-        function getValidationError() {
-        	if(!this.name)
-        	    return 'Address Information requires a name.';
-        	return null;
-        }
-    }
-}());
-
-(function () {
-    angular.module('models.OwnerInformation', []).factory('OwnerInformation', OwnerInformationModel);
-
-    OwnerInformationModel.$inject = ['$filter'];
-
-    function OwnerInformationModel($filter) {
-        /**
-         * @class OwnerInformation
-         * @description OwnerInformation is a an object defined in C# code
-         * @constructor
-         */
-        function OwnerInformation(ownerInformation) {
-            if(!ownerInformation)
-                throw 'Cannot create a new OwnerInformation: Please pass existing OwnerInformation object or empty object to create new OwnerInformation';
-            models.OwnerInformation.apply(this, [ownerInformation]);
-            
-            //Calculated fields 
-            this.__defineGetter__('_fullName', function () {
-                return this.firstName + ' ' + this.lastName;
-            });
-        }
-
-        OwnerInformation.prototype = models.OwnerInformation.prototype;
-        OwnerInformation.prototype.constructor = OwnerInformation;
-        OwnerInformation.prototype.getValidationError = getValidationError;
-        return OwnerInformation;
-        
-        //validation requires atleast a name
-        function getValidationError() {
-        	if(!this.firstName || !this.lastName)
-        	    return 'Owner Information requires a first and last name.';
-        	return null;
-        }
-    }
-}());
-
-(function(){
-    angular.module('myApp.services', ['models.AddressInformation']).factory('addressService', addressService);
-    addressService.$inject = ['AddressInformation', '$q', '$http'];
-    function addressService(AddressInformation, $q, $http) {
-    	var service = {
-    		getDefaultAddressInformation: getDefaultAddressInformation,
-    		saveAddressInformation: saveAddressInformation
-    	};
-    	return service;
-    	
-    	function getDefaultAddressInformation() {
-    		return new AddressInformation({
-    			tags: ['New Address'],
-    			zipCode: 27513
-    		});
-    	}
-    	
-    	function saveAddressInformation(addressInformation) {
-    		return $q(function(resolve, reject){
-    			//cast into the JS object, just in case we are not
-    			addressInformation = new AddressInformation(addressInformation);
-    			var error = addressInformation.getValidationError();
-    			if(!error) {
-    				error = addressInformation.ownerInformation.getValidationError();
-    			}
-    			
-    			if(error) {
-    				reject(error)
-    			} else {
-    				$http();//.....
-    			}
-    		});
-    	}
-    }
-}());
-```
 
 Contributions
 ---

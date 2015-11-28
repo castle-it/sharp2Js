@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using Castle.Sharp2Js.SampleData;
 using Castle.Sharp2Js.Tests.DTOs;
 using Jint.Parser.Ast;
@@ -345,6 +346,193 @@ namespace Castle.Sharp2Js.Tests
 
             Assert.IsTrue(thirdMemberName == "regularCased");
 
+
+        }
+
+
+        [Test]
+        public void InvalidDictionaryKeyHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(DictionaryKeyTesting);
+
+
+            var codeRanThrough = false;
+            try
+            {
+                JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+                {
+                    ClassNameConstantsToRemove = null,
+                    CamelCase = true,
+                    IncludeMergeFunction = false,
+                    OutputNamespace = "models",
+                    RespectDataMemberAttribute = false,
+                    RespectDefaultValueAttribute = false
+                });
+
+                codeRanThrough = true;
+
+            }
+            catch (Exception)
+            {
+                Assert.Pass();
+            }
+
+            if (codeRanThrough)
+            {
+                Assert.Fail("Expected exception generating type with incompatible dictionary key type.");
+            }
+
+        }
+
+        [Test]
+        public void CollectionHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(CollectionTesting);
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true
+            });
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+            
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+        }
+
+        [Test]
+        public void CustomFunctionHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(CollectionTesting);
+
+            var outputJs = JsGenerator.Generate(new[] {modelType}, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() {"Dto"},
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                CustomFunctionProcessors =
+                    new List<Action<StringBuilder, IEnumerable<PropertyBag>, JsGeneratorOptions>>()
+                    {
+                        (builder, bags, arg3) =>
+                        {
+                            builder.AppendLine($"\tthis.helloWorld = function () {{");
+                            builder.AppendLine("\t\tconsole.log('hello');");
+                            builder.AppendLine("\t}");
+                        }
+                    }
+            });
+
+            
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            Assert.IsTrue(outputJs.Contains("this.helloWorld"));
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+        }
+
+        [Test]
+        public void EnumHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(EnumTesting);
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                
+            });
+
+
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+            outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                TreatEnumsAsStrings = true
+            });
+
+
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+
+            
+
+
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
 
         }
 

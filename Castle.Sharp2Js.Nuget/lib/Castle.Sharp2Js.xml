@@ -4,6 +4,79 @@
         <name>Castle.Sharp2Js</name>
     </assembly>
     <members>
+        <member name="T:Castle.Sharp2Js.Helpers">
+            <summary>
+            Helper functions for Js Generator
+            </summary>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.GetName(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Gets the name, filtering out the strings provided.
+            </summary>
+            <param name="input">The input.</param>
+            <param name="nameFilters">The name filters.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.ToCamelCase(System.String,System.Boolean)">
+            <summary>
+            Camel cases an input string.
+            </summary>
+            <param name="input">The string.</param>
+            <param name="camelCase">if set to <c>true</c> [camel case].</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.IsCollectionType(System.Type)">
+            <summary>
+            Determines whether the specified property type is a collection.
+            </summary>
+            <param name="propertyType">Type of the property.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.IsDictionaryType(System.Type)">
+            <summary>
+            Determines whether the specified property type is a dictionary.
+            </summary>
+            <param name="propertyType">Type of the property.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.IsPrimitive(System.Type)">
+            <summary>
+            Determines whether the specified property type is primitive.
+            </summary>
+            <param name="propertyType">Type of the property.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.ShouldGenerateMember(System.Reflection.PropertyInfo,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Determines whether the property should be generated in the Js model.
+            </summary>
+            <param name="propertyInfo">The property information.</param>
+            <param name="generatorOptions">The generator options.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.HasDefaultValue(System.Reflection.PropertyInfo,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Determines whether the property has a default value specified by the DefaultValue attribute.
+            </summary>
+            <param name="propertyInfo">The property information.</param>
+            <param name="generatorOptions">The generator options.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.ReadDefaultValueFromAttribute(System.Reflection.PropertyInfo)">
+            <summary>
+            Reads the default value from the attribute.
+            </summary>
+            <param name="propertyInfo">The property information.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.Helpers.GetPropertyName(System.Reflection.PropertyInfo,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Gets the name of the property.
+            </summary>
+            <param name="propertyInfo">The property information.</param>
+            <param name="generatorOptions">The generator options.</param>
+            <returns></returns>
+        </member>
         <member name="T:Castle.Sharp2Js.JsGenerator">
             <summary>
             Converts C# classes to javascript objects for use across application tiers and in REST calls, etc.
@@ -42,30 +115,59 @@
             <param name="generationOptions">The generation options.</param>
             <returns></returns>
         </member>
-        <member name="M:Castle.Sharp2Js.JsGenerator.GetName(System.String,System.Collections.Generic.List{System.String})">
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildClassClosure(System.Text.StringBuilder)">
             <summary>
-            Gets the name, filtering out the strings provided.
+            Builds the Js class closure.
             </summary>
-            <param name="input">The input.</param>
-            <param name="nameFilters">The name filters.</param>
-            <returns></returns>
+            <param name="sb">The string builder.</param>
         </member>
-        <member name="M:Castle.Sharp2Js.JsGenerator.ToCamelCase(System.String,System.Boolean)">
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildClassConstructor(System.Linq.IGrouping{System.String,Castle.Sharp2Js.PropertyBag},System.Text.StringBuilder,Castle.Sharp2Js.JsGeneratorOptions)">
             <summary>
-            Camel cases an input string.
+            Builds the class constructor.
             </summary>
-            <param name="input">The string.</param>
-            <param name="camelCase">if set to <c>true</c> [camel case].</param>
-            <returns></returns>
+            <param name="type">The type.</param>
+            <param name="sb">The string builder.</param>
+            <param name="options">The options.</param>
         </member>
-        <member name="M:Castle.Sharp2Js.JsGenerator.GetPropertyDictionaryForTypeGeneration(System.Collections.Generic.IEnumerable{System.Type},Castle.Sharp2Js.JsGeneratorOptions,System.Collections.Generic.List{Castle.Sharp2Js.PropertyBag})">
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildMergeFunctionForClass(System.Text.StringBuilder,System.Collections.Generic.IEnumerable{Castle.Sharp2Js.PropertyBag},Castle.Sharp2Js.JsGeneratorOptions)">
             <summary>
-            Gets the property dictionary to be used for type generation.
+            Builds the merge function for a type.
             </summary>
-            <param name="types">The types to generate property information for.</param>
-            <param name="generatorOptions">The generator options.</param>
-            <param name="propertyTypeCollection">The output collection of properties discovered through reflection of the supplied classes.</param>
-            <returns></returns>
+            <param name="sb">The string builder.</param>
+            <param name="propList">The property list.</param>
+            <param name="options">The options.</param>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildPrimitiveProperty(Castle.Sharp2Js.PropertyBag,System.Text.StringBuilder,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Builds a primitive property.
+            </summary>
+            <param name="propEntry">The property entry.</param>
+            <param name="sb">The string builder.</param>
+            <param name="options">The options.</param>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildObjectProperty(System.Text.StringBuilder,Castle.Sharp2Js.PropertyBag,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Builds an object/reference property.
+            </summary>
+            <param name="sb">The string builder.</param>
+            <param name="propEntry">The property entry.</param>
+            <param name="options">The options.</param>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildArrayProperty(System.Text.StringBuilder,Castle.Sharp2Js.PropertyBag,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Builds an array property.
+            </summary>
+            <param name="sb">The string builder.</param>
+            <param name="propEntry">The property entry.</param>
+            <param name="options">The options.</param>
+        </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildDictionaryProperty(System.Text.StringBuilder,Castle.Sharp2Js.PropertyBag,Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Builds a dictionary property.
+            </summary>
+            <param name="sb">The string builder.</param>
+            <param name="propEntry">The property entry.</param>
+            <param name="options">The options.</param>
         </member>
         <member name="T:Castle.Sharp2Js.JsGeneratorOptions">
             <summary>
@@ -114,10 +216,26 @@
         </member>
         <member name="P:Castle.Sharp2Js.JsGeneratorOptions.RespectDefaultValueAttribute">
             <summary>
-            Gets or sets a value indicating whether to respect the DefaultValue attribute when present..
+            Gets or sets a value indicating whether to respect the DefaultValue attribute when present.
             </summary>
             <value>
               <c>true</c> if [respect default value attribute]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.CustomFunctionProcessors">
+            <summary>
+            Gets or sets the custom function processors that can be run per type.
+            </summary>
+            <value>
+            The custom function processors.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.TreatEnumsAsStrings">
+            <summary>
+            Gets or sets a value indicating whether enum values should be treated as strings (the default for serializers like Jil) instead of ints.
+            </summary>
+            <value>
+              <c>true</c> if [treat enums as strings]; otherwise, <c>false</c>.
             </value>
         </member>
         <member name="T:Castle.Sharp2Js.PropertyBag">
@@ -125,21 +243,16 @@
             Responsible for storing data about the type models to be generated
             </summary>
         </member>
-        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag"/> class.
-            </summary>
-        </member>
-        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor(System.String,System.String,System.Type,System.Boolean,System.String,System.Boolean,System.Boolean,System.Object)">
+        <member name="M:Castle.Sharp2Js.PropertyBag.#ctor(System.String,System.Type,System.String,System.Type,System.Collections.Generic.List{Castle.Sharp2Js.PropertyBagTypeInfo},Castle.Sharp2Js.PropertyBag.TransformablePropertyTypeEnum,System.Boolean,System.Object)">
             <summary>
             Initializes a new instance of the <see cref="T:Castle.Sharp2Js.PropertyBag" /> class.
             </summary>
             <param name="typeName">Name of the type.</param>
+            <param name="typeDefinition">The type definition.</param>
             <param name="propertyName">Name of the property.</param>
             <param name="propertyType">Type of the property.</param>
-            <param name="isArray">if set to <c>true</c> [is array].</param>
-            <param name="propertyTypeName">Name of the property type.</param>
-            <param name="isPrimitiveType">if set to <c>true</c> [is primitive type].</param>
+            <param name="collectionInnerTypes">The collection inner types.</param>
+            <param name="transformablePropertyType">Type of the transformable property.</param>
             <param name="hasDefaultValue">if set to <c>true</c> [has default value].</param>
             <param name="defaultValue">The default value.</param>
         </member>
@@ -167,28 +280,21 @@
             The type of the property.
             </value>
         </member>
-        <member name="P:Castle.Sharp2Js.PropertyBag.IsArray">
+        <member name="P:Castle.Sharp2Js.PropertyBag.TransformablePropertyType">
             <summary>
-            Gets or sets a value indicating whether this instance is an array.
+            Determines what class of object the transformer treats the object as 
+            which determines how the pieces are treated when writing Js objects.
             </summary>
             <value>
-              <c>true</c> if this instance is an array; otherwise, <c>false</c>.
+            The type of the transformable property.
             </value>
         </member>
-        <member name="P:Castle.Sharp2Js.PropertyBag.PropertyTypeName">
+        <member name="P:Castle.Sharp2Js.PropertyBag.CollectionInnerTypes">
             <summary>
             Gets or sets the name of the property type.
             </summary>
             <value>
             The name of the property type.
-            </value>
-        </member>
-        <member name="P:Castle.Sharp2Js.PropertyBag.IsPrimitiveType">
-            <summary>
-            Gets or sets a value indicating whether this instance is primitive type.
-            </summary>
-            <value>
-            <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
             </value>
         </member>
         <member name="P:Castle.Sharp2Js.PropertyBag.HasDefaultValue">
@@ -205,6 +311,76 @@
             </summary>
             <value>
             The default value.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBag.TypeDefinition">
+            <summary>
+            Gets or sets the type definition.
+            </summary>
+            <value>
+            The type definition.
+            </value>
+        </member>
+        <member name="T:Castle.Sharp2Js.PropertyBag.TransformablePropertyTypeEnum">
+            <summary>
+            Transformable property types understood by sharp2Js
+            </summary>
+        </member>
+        <member name="F:Castle.Sharp2Js.PropertyBag.TransformablePropertyTypeEnum.Primitive">
+            <summary>
+            The primitive
+            </summary>
+        </member>
+        <member name="F:Castle.Sharp2Js.PropertyBag.TransformablePropertyTypeEnum.CollectionType">
+            <summary>
+            The collection type
+            </summary>
+        </member>
+        <member name="F:Castle.Sharp2Js.PropertyBag.TransformablePropertyTypeEnum.DictionaryType">
+            <summary>
+            The dictionary type
+            </summary>
+        </member>
+        <member name="F:Castle.Sharp2Js.PropertyBag.TransformablePropertyTypeEnum.ReferenceType">
+            <summary>
+            The reference type
+            </summary>
+        </member>
+        <member name="T:Castle.Sharp2Js.PropertyBagTypeInfo">
+            <summary>
+            Contains types contained within collections and designations for dictionary types
+            </summary>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBagTypeInfo.Type">
+            <summary>
+            Gets or sets the type.
+            </summary>
+            <value>
+            The type.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBagTypeInfo.IsDictionaryKey">
+            <summary>
+            Gets or sets a value indicating whether this instance is the dictionary key.
+            </summary>
+            <value>
+            <c>true</c> if this instance is the dictionary key; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBagTypeInfo.IsPrimitiveType">
+            <summary>
+            Gets or sets a value indicating whether this instance is primitive type.
+            </summary>
+            <value>
+            <c>true</c> if this instance is primitive type; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.PropertyBagTypeInfo.IsEnumType">
+            <summary>
+            Gets or sets a value indicating whether this instance is enum type.
+            </summary>
+            <value>
+            <c>true</c> if this instance is enum type; otherwise, <c>false</c>.
             </value>
         </member>
         <member name="T:Castle.Sharp2Js.SampleData.AddressInformation">
@@ -309,6 +485,27 @@
             <value>
             The value.
             </value>
+        </member>
+        <member name="T:Castle.Sharp2Js.TypePropertyDictionaryGenerator">
+            <summary>
+            Generates a list of property type information to be used by the Js Generator
+            </summary>
+        </member>
+        <member name="M:Castle.Sharp2Js.TypePropertyDictionaryGenerator.GetPropertyDictionaryForTypeGeneration(System.Collections.Generic.IEnumerable{System.Type},Castle.Sharp2Js.JsGeneratorOptions,System.Collections.Generic.List{Castle.Sharp2Js.PropertyBag})">
+            <summary>
+            Gets the property dictionary to be used for type generation.
+            </summary>
+            <param name="types">The types to generate property information for.</param>
+            <param name="generatorOptions">The generator options.</param>
+            <param name="propertyTypeCollection">The output collection of properties discovered through reflection of the supplied classes.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Castle.Sharp2Js.TypePropertyDictionaryGenerator.GetCollectionInnerTypes(System.Type)">
+            <summary>
+            Gets inner types of collections and dictionaries.
+            </summary>
+            <param name="propertyType">Type of the property.</param>
+            <returns></returns>
         </member>
     </members>
 </doc>

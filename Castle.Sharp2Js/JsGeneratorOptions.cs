@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Castle.Sharp2Js
 {
@@ -47,11 +49,27 @@ namespace Castle.Sharp2Js
         public bool RespectDataMemberAttribute { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether to respect the DefaultValue attribute when present..
+        /// Gets or sets a value indicating whether to respect the DefaultValue attribute when present.
         /// </summary>
         /// <value>
         ///   <c>true</c> if [respect default value attribute]; otherwise, <c>false</c>.
         /// </value>
         public bool RespectDefaultValueAttribute { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the custom function processors that can be run per type.
+        /// </summary>
+        /// <value>
+        /// The custom function processors.
+        /// </value>
+        public List<Action<StringBuilder, IEnumerable<PropertyBag>, JsGeneratorOptions>> CustomFunctionProcessors { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether enum values should be treated as strings (the default for serializers like Jil) instead of ints.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [treat enums as strings]; otherwise, <c>false</c>.
+        /// </value>
+        public bool TreatEnumsAsStrings { get; set; }
     }
 }
