@@ -1,5 +1,5 @@
 # sharp2Js
-[![Build Status](https://travis-ci.org/castle-it/sharp2Js.svg?branch=master)](https://travis-ci.org/castle-it/sharp2Js)
+[![Build status](https://ci.appveyor.com/api/projects/status/mrfcabdddrtbrs8v/branch/master?svg=true)](https://ci.appveyor.com/project/tghamm/sharp2js/branch/master) [![Coverage Status](https://coveralls.io/repos/castle-it/sharp2Js/badge.svg?branch=master&service=github)](https://coveralls.io/github/castle-it/sharp2Js?branch=master) [![GitHub version](https://badge.fury.io/gh/castle-it%2Fsharp2js.svg)](https://badge.fury.io/gh/castle-it%2Fsharp2js) [![NuGet version](https://badge.fury.io/nu/sharp2js.svg)](https://badge.fury.io/nu/sharp2js)
 
 `sharp2Js` is a small library that can create javascript objects that mirror your `C#` POCO classes and can be easily used to generate js files using `T4` templates.
 
@@ -14,7 +14,6 @@ Features (v1.3.0)
 * Supports the `[DefaultValue]` attribute for primitive types
 * Supports `[IgnoreDataMember]` and `[DataMember]` attributes
 * Supports custom function injection into generated Js objects
-* Test Coverage at 100%
 
 Examples/How-to
 --
