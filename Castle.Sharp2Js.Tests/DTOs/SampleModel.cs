@@ -34,6 +34,9 @@ namespace Castle.Sharp2Js.Tests.DTOs
         [DefaultValue("HelloWorld")]
         public string StringValue1 { get; set; }
 
+        [DefaultValue(true)]
+        public bool BoolValue1 { get; set; }
+
         [DataMember(Name = " ")]
         public string InvalidName1 { get; set; }
 
