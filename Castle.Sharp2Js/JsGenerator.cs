@@ -394,12 +394,15 @@ namespace Castle.Sharp2Js
             }
             else if (propEntry.HasDefaultValue)
             {
+                var writtenValue = propEntry.DefaultValue is bool
+                    ? propEntry.DefaultValue.ToString().ToLower()
+                    : propEntry.DefaultValue;
                 sb.AppendLine(
                     $"\tif (!cons.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
                 sb.AppendLine(
                     propEntry.PropertyType == typeof(string)
-                        ? $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{propEntry.DefaultValue}';"
-                        : $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {propEntry.DefaultValue};");
+                        ? $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{writtenValue}';"
+                        : $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {writtenValue};");
                 sb.AppendLine("\t} else {");
                 sb.AppendLine(
                     $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)};");

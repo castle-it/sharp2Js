@@ -592,6 +592,61 @@ namespace Castle.Sharp2Js.Tests
 
         }
 
+        [Test]
+        public void EqualsDictionaryHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(CollectionTesting);
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                IncludeEqualsFunction = true
+            });
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+
+            var js = new Jint.Parser.JavaScriptParser();
+
+
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+            var strToExecute = "this.models = {};\r\n" + outputJs + ";\r\n" + $"var p1 = new models.CollectionTesting({{ dictionaryCollection: {{ 'Prop1' : 'Test' }} }});\r\n" +
+                               $"var p2 = new models.CollectionTesting({{ dictionaryCollection: {{ 'Prop1' : 'Test' }} }});\r\n" +
+                               $"var result = p1.$equals(p2);";
+
+            var jsEngine = new Jint.Engine().Execute(strToExecute);
+            var res = (bool)jsEngine.GetValue("result").ToObject();
+
+            Assert.IsTrue(res);
+
+            var strToExecuteNotEqual = "this.models = {};\r\n" + outputJs + ";\r\n" + $"var p1 = new models.CollectionTesting({{ dictionaryCollection: {{ 'Prop1' : 'Test' }} }});\r\n" +
+                               $"var p2 = new models.CollectionTesting({{ dictionaryCollection: {{ 'Prop1' : 'Test2' }} }});\r\n" +
+                               $"var result = p1.$equals(p2);";
+
+            var jsEngineNotEqual = new Jint.Engine().Execute(strToExecuteNotEqual);
+            var resNotEqual = (bool)jsEngineNotEqual.GetValue("result").ToObject();
+
+            Assert.IsFalse(resNotEqual);
+
+        }
+
     }
 
     
