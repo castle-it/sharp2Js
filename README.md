@@ -10,7 +10,7 @@ Features (v1.3.0)
 * Allows for an override constructor if you need to wrap the created objects (e.g. for Angular)
 * Outputs to string for easy addition to `T4` template output or otherwise
 * Supports optional camel casing
-* Supports optional automatic removal of phrases like Dto, etc.
+* Supports optional automatic removal of phrases like Dto, etc
 * Supports the `[DefaultValue]` attribute for primitive types
 * Supports `[IgnoreDataMember]` and `[DataMember]` attributes
 * Supports custom function injection into generated Js objects
@@ -123,6 +123,44 @@ models.Feature = function (cons) {
 
 ```
 
+Change Log
+---
+#### v1.4.0 
+###### January 1, 2016
+* Adds support for an `$equals` method that can be used to perform deep comparisons on objects
+* Fixes an issue that caused `bool` `DefaultValue` values to be rendered improperly
+* Switches to Appveyor CI
+* Adds coveralls/OpenCover support
+
+#### v1.3.0
+###### November 27, 2015
+* Adds support for `Enum` types
+* Adds support for custom function parsers if you want to add your own custom functions to the output
+* Adds support for all `IList`, `ICollection`, and `IDictionary` types
+* Light internal refactoring for maintainability
+
+#### v1.2.0
+###### November 16, 2015
+* Fixes the camel-casing implementation
+* Fixes an issue with improperly initialized object types
+* Adds support for the `DefaultValueAttribute` on primitive types
+* Test coverage upped to 100%
+
+#### v1.1.1
+###### November 5, 2015
+* Adds Slack integration to CI
+* Switches to NUnit for unit tests
+* Adds support for `DataMember` and `IgnoreDataMember` attributes
+
+#### v1.1.0
+###### October 24, 2015
+* Adds support for array and recursive types
+* Includes NuGet package
+* Adds `$merge` function to perform a deep merge on objects
+
+#### v1.0.0
+###### October 20, 2015
+* Initial Commit/Version
 
 Contributions
 ---
