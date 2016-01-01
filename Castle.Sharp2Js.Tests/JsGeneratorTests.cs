@@ -105,7 +105,8 @@ namespace Castle.Sharp2Js.Tests
                 ClassNameConstantsToRemove = new List<string>() {"Dto"},
                 CamelCase = true,
                 IncludeMergeFunction = false,
-                OutputNamespace = "models"
+                OutputNamespace = "models",
+                IncludeEqualsFunction = true
             });
 
             Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
@@ -533,6 +534,61 @@ namespace Castle.Sharp2Js.Tests
             {
                 Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
             }
+
+        }
+
+        [Test]
+        public void EqualsHandling()
+        {
+            //Generate a basic javascript model from a C# class
+
+            var modelType = typeof(AddressInformation);
+
+            var outputJs = JsGenerator.Generate(new[] { modelType }, new JsGeneratorOptions()
+            {
+                ClassNameConstantsToRemove = new List<string>() { "Dto" },
+                CamelCase = true,
+                IncludeMergeFunction = true,
+                OutputNamespace = "models",
+                RespectDataMemberAttribute = true,
+                RespectDefaultValueAttribute = true,
+                IncludeEqualsFunction = true
+            });
+
+            Assert.IsTrue(!string.IsNullOrEmpty(outputJs));
+
+            
+            var js = new Jint.Parser.JavaScriptParser();
+
+
+
+            try
+            {
+                js.Parse(outputJs);
+
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Expected no exception parsing javascript, but got: " + ex.Message);
+            }
+
+            var strToExecute = "this.models = {};\r\n" + outputJs + ";\r\n" + $"var p1 = new models.AddressInformation({{ name: 'Test' }});\r\n" +
+                               $"var p2 = new models.AddressInformation({{ name: 'Test' }});\r\n" +
+                               $"var result = p1.$equals(p2);";
+
+            var jsEngine = new Jint.Engine().Execute(strToExecute);
+            var res = (bool)jsEngine.GetValue("result").ToObject();
+
+            Assert.IsTrue(res);
+
+            var strToExecuteNotEqual = "this.models = {};\r\n" + outputJs + ";\r\n" + $"var p1 = new models.AddressInformation({{ name: 'Test' }});\r\n" +
+                               $"var p2 = new models.AddressInformation({{ name: 'Test2' }});\r\n" +
+                               $"var result = p1.$equals(p2);";
+
+            var jsEngineNotEqual = new Jint.Engine().Execute(strToExecuteNotEqual);
+            var resNotEqual = (bool)jsEngineNotEqual.GetValue("result").ToObject();
+
+            Assert.IsFalse(resNotEqual);
 
         }
 

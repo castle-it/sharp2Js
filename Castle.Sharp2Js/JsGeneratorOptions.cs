@@ -32,6 +32,14 @@ namespace Castle.Sharp2Js
         /// <c>true</c> if [include merge function]; otherwise, <c>false</c>.
         /// </value>
         public bool IncludeMergeFunction { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include an optimized equals function for the js objects.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [include equals function]; otherwise, <c>false</c>.
+        /// </value>
+        public bool IncludeEqualsFunction { get; set; } = false;
         /// <summary>
         /// Gets or sets a list of strings to remove from class names (e.g. Dto) automatically.
         /// </summary>
