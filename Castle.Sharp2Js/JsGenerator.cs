@@ -124,6 +124,12 @@ namespace Castle.Sharp2Js
                     BuildMergeFunctionForClass(sb, propList, options);
                 }
 
+                if (options.IncludeEqualsFunction && !typeDefinition.IsEnum)
+                {
+                    sb.AppendLine();
+                    BuildEqualsFunctionForClass(sb, propList, options);
+                }
+
                 if (options.CustomFunctionProcessors?.Any() == true)
                 {
                     foreach (var customProcessor in options.CustomFunctionProcessors)
@@ -183,6 +189,109 @@ namespace Castle.Sharp2Js
                 sb.AppendLine("\tif (!cons) { cons = { }; }");
             }
             
+        }
+
+        /// <summary>
+        /// Builds the equals function for a type.
+        /// </summary>
+        /// <param name="sb">The string builder.</param>
+        /// <param name="propList">The property list.</param>
+        /// <param name="options">The options.</param>
+        private static void BuildEqualsFunctionForClass(StringBuilder sb, IEnumerable<PropertyBag> propList,
+            JsGeneratorOptions options)
+        {
+            //Generate an equals function for two objects
+            sb.AppendLine("\tthis.$equals = function (compareObj) {");
+            sb.AppendLine("\t\tif (!compareObj) { return false; }");
+            foreach (var propEntry in propList)
+            {
+                switch (propEntry.TransformablePropertyType)
+                {
+                    case PropertyBag.TransformablePropertyTypeEnum.CollectionType:
+                        sb.AppendLine(
+                            $"\t\tif (compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} !== this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\tif (!compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine($"\t\t\tif (!this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine($"\t\t\tif (compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length != this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine(
+                            $"\t\t\tfor (i = 0; i < this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}.length; i++) {{");
+                        var collectionType = propEntry.CollectionInnerTypes.First();
+
+                        if (!collectionType.IsPrimitiveType)
+                        {
+                            sb.AppendLine(
+                                $"\t\t\t\tif (!this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i].$equals(compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i])) {{ return false; }};");
+
+                        }
+                        else
+                        {
+                            sb.AppendLine(
+                                $"\t\t\t\tif (this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i] !== compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[i]) {{ return false; }};");
+                        }
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine($"\t\t}}");
+                        
+                        break;
+                    case PropertyBag.TransformablePropertyTypeEnum.DictionaryType:
+                        sb.AppendLine(
+                            $"\t\tif (compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} !== this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\tif (!compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine($"\t\t\tif (!this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        /*sb.AppendLine(
+                            $"\t\tif (this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} != null) {{");*/
+                        sb.AppendLine(
+                            $"\t\t\tfor (var key in this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine(
+                            $"\t\t\t\tif (!compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}.hasOwnProperty(key)) {{");
+                        sb.AppendLine(
+                            $"\t\t\t\t\treturn false;");
+                        sb.AppendLine("\t\t\t\t}");
+                        var valueType = propEntry.CollectionInnerTypes.First(p => !p.IsDictionaryKey);
+
+                        if (!valueType.IsPrimitiveType)
+                        {
+                            sb.AppendLine(
+                                $"\t\t\t\tif (!this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key].$equals(compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key])) {{ return false; }};");
+                        }
+                        else
+                        {
+                            sb.AppendLine(
+                                $"\t\t\t\tif (this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key] !== compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}[key]) {{ return false; }};");
+                        }
+                        sb.AppendLine("\t\t\t}");
+                        sb.AppendLine("\t\t}");
+                        break;
+                    case PropertyBag.TransformablePropertyTypeEnum.ReferenceType:
+                        sb.AppendLine(
+                            $"\t\tif (compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} !== this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\tif (!compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine($"\t\t\tif (!this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
+                        sb.AppendLine($"\t\t\t\treturn false;");
+                        sb.AppendLine($"\t\t\t}}");
+                        sb.AppendLine(
+                                $"\t\t\tif (!this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}.$equals(compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)})) {{ return false; }};");
+                        sb.AppendLine("\t\t}");
+                        break;
+                    case PropertyBag.TransformablePropertyTypeEnum.Primitive:
+                        sb.AppendLine(
+                            $"\t\tif (this.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} !== compareObj.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{ return false; }};");
+                        break;
+                }
+            }
+            sb.AppendLine("\treturn true;");
+            sb.AppendLine("\t}");
         }
 
         /// <summary>
@@ -285,12 +394,15 @@ namespace Castle.Sharp2Js
             }
             else if (propEntry.HasDefaultValue)
             {
+                var writtenValue = propEntry.DefaultValue is bool
+                    ? propEntry.DefaultValue.ToString().ToLower()
+                    : propEntry.DefaultValue;
                 sb.AppendLine(
                     $"\tif (!cons.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)}) {{");
                 sb.AppendLine(
                     propEntry.PropertyType == typeof(string)
-                        ? $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{propEntry.DefaultValue}';"
-                        : $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {propEntry.DefaultValue};");
+                        ? $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = '{writtenValue}';"
+                        : $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = {writtenValue};");
                 sb.AppendLine("\t} else {");
                 sb.AppendLine(
                     $"\t\tthis.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)} = cons.{Helpers.ToCamelCase(propEntry.PropertyName, options.CamelCase)};");

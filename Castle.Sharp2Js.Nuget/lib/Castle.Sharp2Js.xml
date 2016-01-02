@@ -129,6 +129,14 @@
             <param name="sb">The string builder.</param>
             <param name="options">The options.</param>
         </member>
+        <member name="M:Castle.Sharp2Js.JsGenerator.BuildEqualsFunctionForClass(System.Text.StringBuilder,System.Collections.Generic.IEnumerable{Castle.Sharp2Js.PropertyBag},Castle.Sharp2Js.JsGeneratorOptions)">
+            <summary>
+            Builds the equals function for a type.
+            </summary>
+            <param name="sb">The string builder.</param>
+            <param name="propList">The property list.</param>
+            <param name="options">The options.</param>
+        </member>
         <member name="M:Castle.Sharp2Js.JsGenerator.BuildMergeFunctionForClass(System.Text.StringBuilder,System.Collections.Generic.IEnumerable{Castle.Sharp2Js.PropertyBag},Castle.Sharp2Js.JsGeneratorOptions)">
             <summary>
             Builds the merge function for a type.
@@ -196,6 +204,14 @@
             </summary>
             <value>
             <c>true</c> if [include merge function]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Castle.Sharp2Js.JsGeneratorOptions.IncludeEqualsFunction">
+            <summary>
+            Gets or sets a value indicating whether to include an optimized equals function for the js objects.
+            </summary>
+            <value>
+            <c>true</c> if [include equals function]; otherwise, <c>false</c>.
             </value>
         </member>
         <member name="P:Castle.Sharp2Js.JsGeneratorOptions.ClassNameConstantsToRemove">

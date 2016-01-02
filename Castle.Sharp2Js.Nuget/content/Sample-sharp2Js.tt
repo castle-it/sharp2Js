@@ -12,6 +12,7 @@
 	//	  CamelCase = false,
 	//	  OutputNamespace = "models",
 	//	  IncludeMergeFunction = true,
+	//	  IncludeEqualsFunction = true,
 	//	  ClassNameConstantsToRemove = new List<string>() { "Dto" },
 	//	  RespectDataMemberAttribute = true,
 	//	  RespectDefaultValueAttribute = true,
@@ -32,7 +33,7 @@
 	//An example using the default options
 	var str = Castle.Sharp2Js.JsGenerator.Generate(new [] { typeof(Castle.Sharp2Js.SampleData.AddressInformation) });
  #>
-models = {};
+var models = {};
 
 <#=str#>
 
