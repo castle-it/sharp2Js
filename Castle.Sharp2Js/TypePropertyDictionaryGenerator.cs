@@ -20,10 +20,13 @@ namespace Castle.Sharp2Js
             JsGeneratorOptions generatorOptions,
             List<PropertyBag> propertyTypeCollection = null)
         {
+
             if (propertyTypeCollection == null)
             {
                 propertyTypeCollection = new List<PropertyBag>();
             }
+
+            
             foreach (var type in types)
             {
                 if (type.IsEnum)
@@ -73,11 +76,11 @@ namespace Castle.Sharp2Js
 
                                 foreach (var collectionInnerType in collectionInnerTypes.Where(p => !p.IsPrimitiveType))
                                 {
-
-                                    if (propertyTypeCollection.All(p => p.TypeName != collectionInnerType.Type.Name))
+                                    var innerTypeName = collectionInnerType.Type.Name;
+                                    if (propertyTypeCollection.All(p => p.TypeName != innerTypeName))
                                     {
-                                        propertyTypeCollection.AddRange(GetPropertyDictionaryForTypeGeneration(new[] {collectionInnerType.Type},
-                                                generatorOptions, propertyTypeCollection));
+                                        GetPropertyDictionaryForTypeGeneration(new[] {collectionInnerType.Type},
+                                                generatorOptions, propertyTypeCollection);
                                     }
                                 }
                             }
@@ -88,8 +91,8 @@ namespace Castle.Sharp2Js
 
                                 if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
                                 {
-                                    propertyTypeCollection.AddRange(GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
-                                            generatorOptions, propertyTypeCollection));
+                                    GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
+                                            generatorOptions, propertyTypeCollection);
                                 }
                             }
                         }
@@ -112,8 +115,8 @@ namespace Castle.Sharp2Js
                             {
                                 if (propertyTypeCollection.All(p => p.TypeName != propertyType.Name))
                                 {
-                                    propertyTypeCollection.AddRange(GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
-                                            generatorOptions, propertyTypeCollection));
+                                    GetPropertyDictionaryForTypeGeneration(new[] {propertyType},
+                                            generatorOptions, propertyTypeCollection);
                                 }
                             }
 
