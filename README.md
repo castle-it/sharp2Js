@@ -3,7 +3,7 @@
 
 `sharp2Js` is a small library that can create javascript objects that mirror your `C#` POCO classes and can be easily used to generate js files using `T4` templates.
 
-Features (v1.4.0)
+Features (v1.4.1)
 --
 * Optionally generates merge map function to make applying model changes easy
 * Optionally generates a deep comparison `$equals` function to compare equality easily
@@ -126,6 +126,10 @@ models.Feature = function (cons) {
 
 Change Log
 ---
+#### v1.4.1 
+###### June 7, 2016
+* Addresses `OutOfMemoryException` caused by some object graphs.
+
 #### v1.4.0 
 ###### January 1, 2016
 * Adds support for an `$equals` method that can be used to perform deep comparisons on objects
