@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,9 +8,20 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Castle.Sharp2Js</RootNamespace>
     <AssemblyName>Castle.Sharp2Js</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>False</EnableDefaultEmbeddedResourceItems>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <Version>1.5.0</Version>
+    <Company>Castle Worldwide, Inc</Company>
+    <Product>sharp2Js</Product>
+    <Authors>Grant Hamm, Jared Kremer</Authors>
+    <Description>sharp2Js is a small library that can create javascript objects that mirror your C# POCO classes and can be easily used to generate js files using T4 templates.</Description>
+    <Copyright>Copyright © Castle Worldwide, Inc 2020</Copyright>
+    <PackageProjectUrl>https://github.com/castle-it/sharp2Js</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/castle-it/sharp2Js</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,7 +45,7 @@
     <DocumentationFile>bin\Release\Castle.Sharp2Js.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' ">
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -54,7 +64,6 @@
     <Compile Include="SampleData\SampleModel.cs" />
     <Compile Include="TypePropertyDictionaryGenerator.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
