@@ -22,6 +22,7 @@
     <PackageProjectUrl>https://github.com/castle-it/sharp2Js</PackageProjectUrl>
     <RepositoryUrl>https://github.com/castle-it/sharp2Js</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>sharp2Js</PackageId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
