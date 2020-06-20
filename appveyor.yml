@@ -11,9 +11,9 @@ environment:
   COVERALLS_REPO_TOKEN:
     secure: 4f0efV/bdZ9RuKTKFbnBKgNvVcLCxEKxNYC/2Y6ta0qHYuuaZNzpGOSeW52rdAQ+
 before_build:
-  - dotnet restore
   - nuget restore "Castle.Sharp2Js.Tests.sln"
-build:
+  - dotnet restore
+  build:
   project: Castle.Sharp2Js.Tests.sln
   verbosity: minimal
 test_script:
